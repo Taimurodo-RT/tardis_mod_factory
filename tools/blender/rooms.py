@@ -20,6 +20,7 @@ from mathutils import Matrix
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 OUT = (argv[0] if argv else '//render').rstrip('/\\')
 SAMPLES = int(argv[1]) if len(argv) > 1 else 64
+ONLY = set(argv[2:])  # optional subset: eye-floor eye-wall console-wall
 LIFT = 0.75
 
 scene = bpy.context.scene
@@ -366,26 +367,34 @@ def eye_floor():
     bottom.data.materials.append(plate('deep', (0.02, 0.012, 0.01, 1), emit=((1.0, 0.35, 0.06, 1), 0.07)))
 
 
+def wanted(name):
+    return not ONLY or name in ONLY
+
+
 # Eye hall floor
-clear()
-eye_floor()
-lights(star=5000)
-shear_everything()
-camera(68, 2048)
-render('eye-floor')
+if wanted('eye-floor'):
+    clear()
+    eye_floor()
+    lights(star=5000)
+    shear_everything()
+    camera(68, 2048)
+    render('eye-floor')
 
 # Eye hall wall: closed ring
-clear()
-build_wall(29.6, 31.9, 2.4, (), 34)
-lights()
-shear_everything()
-camera(68, 2048)
-render('eye-wall')
+if wanted('eye-wall'):
+    clear()
+    build_wall(29.6, 31.9, 2.4, (), 34)
+    lights()
+    shear_everything()
+    camera(68, 2048)
+    render('eye-wall')
 
-# Console room wall: corridors north, east and south (half-widths in tiles)
-clear()
-build_wall(13.4, 15.4, 2.0, ((90, 2.2), (0, 2.2), (270, 2.6)), 17.2)
-lights()
-shear_everything()
-camera(36, 1024)
-render('console-wall')
+# Console room wall: corridors north (rooms) and east (cargo hold); the exit doors sit in the
+# south wall as their own sprite.
+if wanted('console-wall'):
+    clear()
+    build_wall(13.4, 15.4, 2.0, ((90, 2.2), (0, 2.2)), 17.2)
+    lights()
+    shear_everything()
+    camera(36, 1024)
+    render('console-wall')

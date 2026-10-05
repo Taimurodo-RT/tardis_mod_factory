@@ -131,10 +131,11 @@ data:extend({ eye })
 local exit = table.deepcopy(terminal)
 exit.name = 'tardis-exit'
 exit.localised_name = { 'entity-name.tardis-exit' }
-exit.picture = { filename = P .. 'exterior-open.png', width = 256, height = 384, scale = 0.46, shift = { 0, -1.55 } }
+-- The doors themselves are drawn by ambience.lua; this entity is the clickable doorway.
+exit.picture = util.empty_sprite()
 exit.collision_box = { { 0, 0 }, { 0, 0 } }
 exit.collision_mask = { layers = {} }
-exit.selection_box = { { -1.7, -3.5 }, { 1.7, 1 } }
+exit.selection_box = { { -1.5, -4.2 }, { 1.5, 0.3 } }
 data:extend({
   exit,
 })

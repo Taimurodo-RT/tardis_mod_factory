@@ -84,3 +84,11 @@ if loop:
             sheet.paste(fr, ((i % 9) * 448, (i // 9) * 448))
         sheet.save(OUT / f'eye-core-{n}.png', optimize=True)
         print(f'eye-core-{n}.png: {len(chunk)} frames, {rows} rows')
+
+# Inner doors (ChatGPT, round 2): the alcove in the console room's south wall, closed and open.
+for state in ('closed', 'open'):
+    src = ROOT / f'art/round-2/chatgpt/doors-{state}.png'
+    if src.exists():
+        img = Image.open(src).convert('RGBA')
+        process(img, lambda x, y, d, r, g, b, a: tint((255, 240, 210), r, g, b, a, 200) if a < 200 else (r, g, b, a))
+        save(square(img), f'inner-doors-{state}.png', 1024)

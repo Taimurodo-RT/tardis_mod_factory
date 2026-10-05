@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.11.0
+Date: 2026-10-05
+  Graphics:
+    - The exit is now the TARDIS doors set into the console room's south wall. They open as you approach and the doorway fills with white light; walk through to step outside.
+  Changes:
+    - The old exit corridor and its floor label are removed; you arrive just inside the doors.
+---------------------------------------------------------------------------------------------------
 Version: 1.10.0
 Date: 2026-10-05
   Graphics:

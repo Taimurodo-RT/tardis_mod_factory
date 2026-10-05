@@ -8,6 +8,22 @@ data:extend({
   { type = 'sprite', name = 'tardis-eye-floor', filename = P .. 'eye-floor.png', size = 2048, scale = 1.0625 },
   { type = 'sprite', name = 'tardis-eye-wall', filename = P .. 'eye-wall.png', size = 2048, scale = 1.0625 },
   { type = 'sprite', name = 'tardis-console-wall', filename = P .. 'console-wall.png', size = 1024, scale = 1.125 },
+  -- The TARDIS doors in the console room's south wall (ChatGPT, tools/prepare_art.py): the alcove is
+  -- 9.4 tiles wide at this scale and the doorway 3 tiles.
+  {
+    type = 'sprite',
+    name = 'tardis-inner-doors-closed',
+    filename = P .. 'inner-doors-closed.png',
+    size = 1024,
+    scale = 0.294,
+  },
+  {
+    type = 'sprite',
+    name = 'tardis-inner-doors-open',
+    filename = P .. 'inner-doors-open.png',
+    size = 1024,
+    scale = 0.294,
+  },
   -- White radial glow, 8 tiles across at scale 1; tinted and pulsed at runtime. Additive, so it
   -- reads in the always-lit console room where draw_light would be invisible.
   { type = 'sprite', name = 'tardis-glow', filename = P .. 'glow.png', size = 256, blend_mode = 'additive' },

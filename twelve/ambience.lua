@@ -36,6 +36,30 @@ function A.ensure(f)
     end
     a.hull = nil
   end
+  for _, state in ipairs({ 'closed', 'open' }) do
+    local key = 'door_' .. state
+    if not valid(a[key]) then
+      -- Threshold on the wall line (y 14.6), the alcove rising north into the room.
+      a[key] = rendering.draw_sprite({
+        sprite = 'tardis-inner-doors-' .. state,
+        surface = f.surface,
+        target = { 0, 12.7 },
+        render_layer = 'lower-object',
+        tint = state == 'open' and { 0, 0, 0, 0 } or nil,
+      })
+    end
+  end
+  if not valid(a.doorway) then
+    a.doorway = rendering.draw_sprite({
+      sprite = 'tardis-glow',
+      surface = f.surface,
+      target = { 0, 13.6 },
+      render_layer = 'lower-object-above-shadow',
+      x_scale = 0.9,
+      y_scale = 0.7,
+      tint = { 0, 0, 0, 0 },
+    })
+  end
   if not valid(a.under) then
     a.under = rendering.draw_sprite({
       sprite = 'tardis-glow',
@@ -65,6 +89,13 @@ function A.tick(f, low)
   local a = f.ambience
   if not a then
     return
+  end
+  local open = f.inner_door or 0
+  if valid(a.door_open) then
+    a.door_open.color = { open, open, open, open }
+  end
+  if valid(a.doorway) then
+    a.doorway.color = glow({ 1, 0.97, 0.9 }, 0.7 * open)
   end
   local story = f.voyage or {}
   local returned = story.returned

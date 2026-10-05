@@ -92,6 +92,7 @@ try:
         ("room-2", "f.surface", "Twelve.Rooms.position(2,f)", 0.7),
         ("room-3", "f.surface", "Twelve.Rooms.position(3,f)", 0.7),
         ("interior-wide", "f.surface", "{0,-30}", 0.25),
+        ("doors", "f.surface", "{0,11}", 1.0),
     ]
     r.lua("local f=Twelve.get(storage.cap_id) for _,s in pairs{f.surface,f.eye_surface} do s.request_to_generate_chunks({0,0},6) s.force_generate_chunk_requests() game.forces.player.chart(s,{{-200,-200},{200,200}}) end")
     time.sleep(3)
@@ -101,6 +102,9 @@ try:
         print(name, r.lua(f"local f=Twelve.get(storage.cap_id) local ok,e=pcall(function() game.take_screenshot{{by_player=1,surface={surf},position={pos},zoom={zoom},resolution={{1600,1000}},show_gui=false,show_entity_info=false,daytime=0.5,path='scene-{name}.png'}} end) rcon.print(ok and 'ok' or tostring(e))"))
         time.sleep(1)
     time.sleep(4)
+    print('door-walk', r.lua("local p=game.get_player(1) local f=Twelve.get(storage.cap_id) Twelve.enter(1,f.id) storage.t0=game.tick rcon.print(p.physical_surface.name..' door='..tostring(f.inner_door))"))
+    time.sleep(2)
+    print('door-walk', r.lua("local p=game.get_player(1) local f=Twelve.get(storage.cap_id) storage.twelve.last_walk[1]=-1000 p.teleport({0,14.6}) Twelve.walk{player_index=1} rcon.print(p.physical_surface.name..' door='..tostring(f.inner_door))"))
     print('server alive:', server.poll() is None)
     print('errors in server log:', [l for l in (LAB / 'server.log').read_text(encoding='utf-8', errors='replace').splitlines() if 'Error' in l][-10:])
 finally:

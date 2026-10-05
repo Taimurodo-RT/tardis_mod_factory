@@ -466,7 +466,8 @@ function M.enter(index, id)
   if not p or not f or p.force ~= f.force or not p.character or f.flight then
     return false
   end
-  local at = f.surface.find_non_colliding_position('character', { 0, 17 }, 3, 0.25)
+  -- Step in through the doors in the south wall.
+  local at = f.surface.find_non_colliding_position('character', { 0, 11.5 }, 3, 0.25)
   if not at then
     return false
   end
@@ -521,7 +522,8 @@ function M.walk(e)
       if Eye.is_inside(p, f) then
         return
       elseif p.physical_surface == f.surface then
-        if xy.y > 18.7 and math.abs(xy.x) < 2 then
+        -- Through the open doors in the south wall.
+        if xy.y > 14.2 and math.abs(xy.x) < 1.5 and (f.inner_door or 0) >= 0.75 then
           M.leave(p.index, f.id)
         end
         return
@@ -830,6 +832,15 @@ function M.tick()
     local eye_used = valid(f.eye_power) and math.max(10000, (f.eye_allocated or 0) - f.eye_power.energy) or 0
     reclaim(f)
     f.energy = math.min(C.capacity, f.energy + Voyage.recharge(f) * C.step / 60)
+    -- The inner doors open as someone approaches them, like the box outside.
+    local near = false
+    for _, pl in pairs(game.connected_players) do
+      local at = pl.physical_position
+      if pl.physical_surface == f.surface and math.abs(at.x) < 3.5 and at.y > 9 and at.y < 15.5 then
+        near = true
+      end
+    end
+    f.inner_door = math.max(0, math.min(1, (f.inner_door or 0) + (near and 0.25 or -0.2)))
     Ambience.tick(f, Voyage.can_fly(f) and before < Voyage.base_cost)
     if f.flight and game.tick >= f.flight.until_tick then
       finish(f)
@@ -981,16 +992,40 @@ function M.ensure_decor(f)
       end
     end
   end
+  -- 1.11: the exit is the TARDIS doors in the south wall; the old corridor and its label go.
+  if valid(f.exit_entity) and f.exit_entity.position.y > 16 then
+    f.exit_entity.destroy()
+  end
+  if f.exit_label and f.exit_label.valid then
+    f.exit_label.destroy()
+  end
+  f.exit_label = nil
   if not valid(f.exit_entity) then
-    f.exit_entity = protect(f.surface.create_entity({ name = 'tardis-exit', position = { 0, 20 }, force = f.force }))
-    f.exit_label = rendering.draw_text({
-      text = { 'tardis-ship.exit-label' },
-      surface = f.surface,
-      target = { 0, 15.5 },
-      color = { 1, 0.83, 0.43 },
-      scale = 1.15,
-      alignment = 'center',
-    })
+    f.exit_entity = protect(f.surface.create_entity({ name = 'tardis-exit', position = { 0, 14.4 }, force = f.force }))
+  end
+  if not f.door_alcove then
+    f.door_alcove = {}
+    -- The alcove's side walls block movement like the rest of the ring.
+    for _, x in ipairs({ -4.5, -3.5, -2.5, 2.5, 3.5, 4.5 }) do
+      for _, y in ipairs({ 11.5, 12.5, 13.5 }) do
+        if f.surface.can_place_entity({ name = 'tardis-rim-collider', position = { x, y }, force = f.force }) then
+          local c =
+            protect(f.surface.create_entity({ name = 'tardis-rim-collider', position = { x, y }, force = f.force }))
+          f.door_alcove[#f.door_alcove + 1] = c
+        end
+      end
+    end
+    -- The corridor behind the old exit is closed off when nothing stands in it.
+    local area = { { -2, 15.5 }, { 2, 21 } }
+    if f.surface.count_entities_filtered({ area = area, type = { 'character', 'corpse' }, invert = true }) == 0 then
+      local tiles = {}
+      for x = -2, 1 do
+        for y = 16, 20 do
+          tiles[#tiles + 1] = { name = 'out-of-map', position = { x, y } }
+        end
+      end
+      f.surface.set_tiles(tiles, true)
+    end
   end
 end
 function M.relayout(index, id)
