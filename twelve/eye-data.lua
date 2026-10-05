@@ -66,5 +66,12 @@ data:extend({
     scale = 0.38,
     shift = { 0, -1 },
   },
-  { type = 'sprite', name = 'tardis-eye-star-glow', filename = P .. 'star.png', width = 768, height = 768, scale = 0.59 },
+  {
+    type = 'sprite',
+    name = 'tardis-eye-star-glow',
+    filename = P .. 'star.png',
+    width = 768,
+    height = 768,
+    scale = 0.59,
+  },
 })

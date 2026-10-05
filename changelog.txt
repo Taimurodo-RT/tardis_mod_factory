@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.6.0
+Date: 2026-10-05
+  Locale:
+    - All in-game text (console, messages, story, repairs, rooms, Eye of Harmony, circuit errors) now comes from locale files.
+    - Added a full English translation; Russian text is unchanged.
+    - New bookmarks without a name get a localised default name.
+  Changes:
+    - Added check_locale.py to verify that every locale key exists in both languages.
+---------------------------------------------------------------------------------------------------
 Version: 1.5.1
 Date: 2026-10-05
   Changes:

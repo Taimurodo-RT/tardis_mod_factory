@@ -95,14 +95,14 @@ end
 local function resolve_destination(f, code)
   local name = Circuit.planets[code]
   if not name then
-    return nil, 'Неизвестный код планеты: ' .. tostring(code) .. '.'
+    return nil, { 'tardis-voyage.circuit-unknown-planet-code', tostring(code) }
   end
   local planet = game.planets[name]
   if not planet then
-    return nil, 'Планета недоступна в этой партии.'
+    return nil, { 'tardis-voyage.circuit-planet-unavailable' }
   end
   if not Voyage.is_unlocked(f.force, name) then
-    return nil, 'Планета ещё не исследована.'
+    return nil, { 'tardis-voyage.circuit-planet-not-researched' }
   end
   return planet.surface or planet.create_surface()
 end
@@ -110,12 +110,12 @@ local function command(f, M, values)
   local c = f.circuit
   if c.inhibit then
     c.last_result = -4
-    c.last_error = 'Прыжки заблокированы логической сетью.'
+    c.last_error = { 'tardis-voyage.circuit-jumps-inhibited' }
     return
   end
   if f.flight then
     c.last_result = -3
-    c.last_error = 'ТАРДИС уже в полёте.'
+    c.last_error = { 'tardis-voyage.already-flying' }
     return
   end
   local destination, err = resolve_destination(f, values.destination or 0)

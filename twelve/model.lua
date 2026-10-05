@@ -36,7 +36,8 @@ function M.get(id)
   return root().ships[tonumber(id)]
 end
 function M.init()
-  storage.twelve = storage.twelve or { ships = {}, next_id = 1, ports = {}, players = {}, starters = {}, last_walk = {} }
+  storage.twelve = storage.twelve
+    or { ships = {}, next_id = 1, ports = {}, players = {}, starters = {}, last_walk = {} }
   for _, f in pairs(storage.twelve.ships) do
     Rooms.init(f)
     Voyage.ensure(f, true)
@@ -103,7 +104,8 @@ function M.crash_tick()
             p.force.chart(s, { { at.x - 24, at.y - 24 }, { at.x + 24, at.y + 24 } })
             p.force.print({
               '',
-              '[color=235,184,102]Аварийный журнал[/color] Ваш корабль задел синюю будку при крушении. Внутри обнаружено пространство, превышающее внешние размеры. Войдите с юга; восстановление — Ctrl+T. [gps=',
+              { 'tardis-ship.crash-log' },
+              ' [gps=',
               at.x,
               ',',
               at.y,
@@ -237,19 +239,16 @@ function M.door_tick(f)
   end
 end
 local function interior(f)
-  local s = game.create_surface(
-    'tardis12-' .. f.id,
-    {
-      width = 1,
-      height = 1,
-      autoplace_controls = {},
-      autoplace_settings = {
-        entity = { treat_missing_as_default = false },
-        tile = { treat_missing_as_default = false },
-        decorative = { treat_missing_as_default = false },
-      },
-    }
-  )
+  local s = game.create_surface('tardis12-' .. f.id, {
+    width = 1,
+    height = 1,
+    autoplace_controls = {},
+    autoplace_settings = {
+      entity = { treat_missing_as_default = false },
+      tile = { treat_missing_as_default = false },
+      decorative = { treat_missing_as_default = false },
+    },
+  })
   f.surface = s
   s.freeze_daytime = true
   s.daytime = 0
@@ -282,7 +281,7 @@ local function interior(f)
   f.inner_connector = protect(s.create_entity({ name = 'tardis-connector', position = { 31, 5 }, force = f.force }))
   f.renders = {
     rendering.draw_text({
-      text = 'ГРУЗОВОЙ ОТСЕК',
+      text = { 'tardis-ship.cargo-bay-label' },
       surface = s,
       target = { 30, -10 },
       color = { 0.55, 0.8, 1 },
@@ -290,7 +289,7 @@ local function interior(f)
       alignment = 'center',
     }),
     rendering.draw_text({
-      text = 'Терминал склада',
+      text = { 'tardis-ship.warehouse-terminal-label' },
       surface = s,
       target = { 24, -5 },
       color = { 1, 0.8, 0.4 },
@@ -324,7 +323,7 @@ function M.create(box)
     energy = C.capacity,
     export = true,
     interior_power = true,
-    cargo = game.create_inventory(C.base_slots, { '', 'ТАРДИС XII / ', id }),
+    cargo = game.create_inventory(C.base_slots, { 'tardis-ship.cargo-title', id }),
     bookmarks = {},
     jumps = 0,
   }
@@ -336,7 +335,8 @@ function M.create(box)
   Interior.apply(f)
   M.ensure_eye(f)
   M.ensure_decor(f)
-  f.bookmarks[1] = { name = 'Дом', surface = box.surface.index, x = box.position.x, y = box.position.y }
+  f.bookmarks[1] =
+    { name = { 'tardis-ship.home-bookmark' }, surface = box.surface.index, x = box.position.x, y = box.position.y }
   return id
 end
 function M.built(e)
@@ -387,7 +387,12 @@ local function pack(entity, buffer, drop)
         buffer.clear()
         buffer.insert(item)
       elseif drop then
-        entity.surface.spill_item_stack({ position = entity.position, stack = item, enable_looted = false, allow_belts = false })
+        entity.surface.spill_item_stack({
+          position = entity.position,
+          stack = item,
+          enable_looted = false,
+          allow_belts = false,
+        })
       end
       f.box = nil
       return
@@ -439,9 +444,7 @@ function M.surface_deleted(e)
       destroy_outside(f)
       f.box = nil
       f.flight = nil
-      f.force.print(
-        'ТАРДИС XII: планета удалена. Вызовите корабль через Ctrl+T → Призвать.'
-      )
+      f.force.print({ 'tardis-ship.planet-deleted' })
     end
   end
 end
@@ -473,7 +476,7 @@ function M.leave(index, id)
     return M.ascend(index, id)
   end
   if f.flight then
-    msg(p, 'Идёт полёт. До материализации остаётся несколько секунд.')
+    msg(p, { 'tardis-ship.in-flight-wait' })
     return false
   end
   if not valid(f.box) then
@@ -543,19 +546,19 @@ function M.jump(id, surface_id, x, y)
   local f = M.get(id)
   local s = game.get_surface(surface_id)
   if not f or not s then
-    return false, 'Не найдена точка назначения.'
+    return false, { 'tardis-ship.no-destination' }
   end
   if s.name:sub(1, 9) == 'tardis12-' or s.platform then
-    return false, 'Выберите поверхность планеты.'
+    return false, { 'tardis-ship.pick-planet' }
   end
   if f.flight then
-    return false, 'ТАРДИС уже в полёте.'
+    return false, { 'tardis-ship.already-in-flight' }
   end
   if not valid(f.box) then
-    return false, 'Сначала разместите или призовите будку.'
+    return false, { 'tardis-ship.place-box-first' }
   end
   if f.circuit and f.circuit.inhibit then
-    return false, 'Прыжки заблокированы логической сетью.'
+    return false, { 'tardis-ship.jumps-inhibited' }
   end
   local quote = Voyage.quote(f, s)
   if not quote.ok then
@@ -564,11 +567,11 @@ function M.jump(id, surface_id, x, y)
   x = tonumber(x) or 0
   y = tonumber(y) or 0
   if math.abs(x) > 100000 or math.abs(y) > 100000 then
-    return false, 'Координаты должны быть в пределах ±100000.'
+    return false, { 'tardis-ship.coords-out-of-range' }
   end
   local at = safe_landing(s, { x, y })
   if not at then
-    return false, 'Рядом нет безопасного места для посадки.'
+    return false, { 'tardis-ship.no-safe-landing' }
   end
   reclaim(f)
   f.energy = f.energy - quote.cost
@@ -592,7 +595,7 @@ function M.jump(id, surface_id, x, y)
     target = f.box,
     time_to_live = C.flight_ticks,
   })
-  return true, 'Дематериализация…'
+  return true, { 'tardis-ship.dematerialising' }
 end
 local function finish(f)
   local t = f.flight
@@ -605,7 +608,7 @@ local function finish(f)
     if valid(f.box) then
       f.box.minable = true
     end
-    f.force.print('ТАРДИС XII: посадка отменена, энергия возвращена.')
+    f.force.print({ 'tardis-ship.landing-cancelled' })
     return
   end
   local old = f.box
@@ -632,8 +635,7 @@ local function finish(f)
   s.play_sound({ path = 'tardis-teleport-complete', position = at, volume_modifier = 0.5 })
   f.force.print({
     '',
-    'ТАРДИС XII: материализация — ',
-    M.surface_name(s),
+    { 'tardis-ship.materialised', M.surface_name(s) },
     ' [gps=',
     at.x,
     ',',
@@ -645,35 +647,33 @@ local function finish(f)
 end
 function M.recall(p, f)
   if p.force ~= f.force or inside(p, f) then
-    return false, 'Призыв доступен снаружи Тардис.'
+    return false, { 'tardis-ship.recall-outside-only' }
   end
   if valid(f.box) then
     return M.jump(f.id, p.physical_surface.index, p.physical_position.x + 4, p.physical_position.y)
   end
   if f.flight then
-    return false, 'Идёт полёт.'
+    return false, { 'tardis-ship.in-flight' }
   end
   if f.voyage.returned then
-    return false,
-      'ТАРДИС возвращена Доктору. Завод доступен через пространственный якорь.'
+    return false, { 'tardis-ship.returned-to-doctor' }
   end
   local quote = Voyage.quote(f, p.physical_surface)
   if not quote.ok then
     return false, quote.error
   end
   if f.circuit and f.circuit.inhibit then
-    return false, 'Прыжки заблокированы логической сетью.'
+    return false, { 'tardis-ship.jumps-inhibited' }
   end
   local at = safe_landing(p.physical_surface, { p.physical_position.x + 4, p.physical_position.y })
   if not at then
-    return false, 'Нет безопасной площадки.'
+    return false, { 'tardis-ship.no-safe-pad' }
   end
   reclaim(f)
   f.energy = f.energy - quote.cost
   f.box = p.physical_surface.create_entity({ name = 'tardis', position = at, force = f.force })
   exterior(f)
-  return true,
-    'Тардис призвана. Старый упакованный предмет больше не содержит этот интерьер.'
+  return true, { 'tardis-ship.recalled' }
 end
 -- Native stack-to-stack transfers preserve tags, armor grids, durability and spoilage.
 -- No item is removed until Factorio has accepted it into the destination.
@@ -731,14 +731,14 @@ end
 function M.build_room(index, id, slot, kind)
   local f = M.get(id)
   if not f then
-    return false, 'Корабль не найден.'
+    return false, { 'tardis-ship.ship-not-found' }
   end
   return Rooms.request(game.get_player(index), f, slot, kind, M.move)
 end
 function M.cancel_room(index, id, slot)
   local f = M.get(id)
   if not f then
-    return false, 'Корабль не найден.'
+    return false, { 'tardis-ship.ship-not-found' }
   end
   return Rooms.cancel(game.get_player(index), f, tonumber(slot), M.move)
 end
@@ -915,8 +915,11 @@ function M.demo(p)
     p.force.unlock_space_location(name)
   end
   for i, name in ipairs({ 'tardis-input', 'tardis-output' }) do
-    local e =
-      p.physical_surface.create_entity({ name = name, position = { at.x + (i == 1 and -3 or 3), at.y + 1 }, force = p.force })
+    local e = p.physical_surface.create_entity({
+      name = name,
+      position = { at.x + (i == 1 and -3 or 3), at.y + 1 },
+      force = p.force,
+    })
     M.built({ entity = e })
     if i == 2 then
       M.configure_port(e.unit_number, { name = 'iron-plate', quality = 'normal' }, 1000, true)
@@ -929,8 +932,12 @@ function M.demo(p)
 end
 function M.ensure_decor(f)
   if not (f.rim and f.rim.valid) then
-    f.rim =
-      rendering.draw_sprite({ sprite = 'tardis-circular-rim', surface = f.surface, target = { 0, 0 }, render_layer = 'floor' })
+    f.rim = rendering.draw_sprite({
+      sprite = 'tardis-circular-rim',
+      surface = f.surface,
+      target = { 0, 0 },
+      render_layer = 'floor',
+    })
   end
   for _, e in
     pairs(f.surface.find_entities_filtered({ name = 'tardis-roundel-wall', area = { { -15, -15 }, { 15, 15 } } }))
@@ -959,7 +966,7 @@ function M.ensure_decor(f)
   if not valid(f.exit_entity) then
     f.exit_entity = protect(f.surface.create_entity({ name = 'tardis-exit', position = { 0, 20 }, force = f.force }))
     f.exit_label = rendering.draw_text({
-      text = '▼  ВЫХОД  ▼',
+      text = { 'tardis-ship.exit-label' },
       surface = f.surface,
       target = { 0, 15.5 },
       color = { 1, 0.83, 0.43 },
@@ -972,16 +979,15 @@ function M.relayout(index, id)
   local p = game.get_player(index)
   local f = M.get(id)
   if not p or not f or p.force ~= f.force or not inside(p, f) then
-    return false, 'Перестройка доступна из внутренней консоли.'
+    return false, { 'tardis-ship.relayout-console-only' }
   end
   if f.flight then
-    return false, 'Дождитесь окончания полёта.'
+    return false, { 'tardis-ship.wait-flight-end' }
   end
   Interior.apply(f)
   M.ensure_decor(f)
   return f.room_layout_version == 2,
-    f.room_layout_version == 2 and 'Комнаты соединены северным деревом.'
-      or f.room_layout_error
+    f.room_layout_version == 2 and { 'tardis-ship.rooms-connected' } or f.room_layout_error
 end
 function M.ensure_eye(f)
   -- The legacy decorative container might have been fed by an inserter. M.move
@@ -1005,11 +1011,11 @@ function M.descend(index, id)
   local p = game.get_player(index)
   local f = M.get(id)
   if not p or not f or p.force ~= f.force then
-    return false, 'Корабль не найден.'
+    return false, { 'tardis-ship.ship-not-found' }
   end
   M.ensure_eye(f)
   if not near_hatch(p, f.eye_room and f.eye_room.hatch) then
-    return false, 'Подойдите к люку в центральном зале (до 4 клеток).'
+    return false, { 'tardis-ship.approach-hatch' }
   end
   local ok, why = Eye.enter(p, f)
   if ok then
@@ -1023,11 +1029,10 @@ function M.ascend(index, id)
   local p = game.get_player(index)
   local f = M.get(id)
   if not p or not f or p.force ~= f.force then
-    return false, 'Корабль не найден.'
+    return false, { 'tardis-ship.ship-not-found' }
   end
   if not near_hatch(p, f.eye_room and f.eye_room.ladder) then
-    return false,
-      'Подойдите к лестнице в южной части зала Ока (до 4 клеток).'
+    return false, { 'tardis-ship.approach-ladder' }
   end
   local ok, why = Eye.leave(p, f)
   if ok then
@@ -1038,7 +1043,7 @@ end
 function M.repair_eye(index, id, key)
   local f = M.get(id)
   if not f then
-    return false, 'Корабль не найден.'
+    return false, { 'tardis-ship.ship-not-found' }
   end
   local ok, why = EyeCore.repair(game.get_player(index), f, key)
   if ok then
@@ -1055,7 +1060,7 @@ end
 function M.repair(index, id, key)
   local f = M.get(id)
   if not f then
-    return false, 'Корабль не найден.'
+    return false, { 'tardis-ship.ship-not-found' }
   end
   local ok, why = Voyage.repair(game.get_player(index), f, key)
   if ok and valid(f.box) then
@@ -1067,10 +1072,10 @@ function M.return_doctor(index, id)
   local p = game.get_player(index)
   local f = M.get(id)
   if not p or not f or p.force ~= f.force then
-    return false, 'Корабль не найден.'
+    return false, { 'tardis-ship.ship-not-found' }
   end
   if not inside(p, f) then
-    return false, 'Отправка доступна изнутри ТАРДИС.'
+    return false, { 'tardis-ship.return-inside-only' }
   end
   local ok, why = Voyage.return_ready(f)
   if not ok then
@@ -1084,11 +1089,11 @@ function M.return_doctor(index, id)
   nauvis.force_generate_chunk_requests()
   local at = nauvis.find_non_colliding_position('tardis-anchor', { home.x + 5, home.y }, 32, 0.5)
   if not at then
-    return false, 'Для пространственного якоря на Наувисе нет места.'
+    return false, { 'tardis-ship.anchor-no-room' }
   end
   local anchor = protect(nauvis.create_entity({ name = 'tardis-anchor', position = at, force = f.force }))
   if not anchor then
-    return false, 'Не удалось закрепить завод на Наувисе.'
+    return false, { 'tardis-ship.anchor-failed' }
   end
   local old = f.box
   local dest = old.surface
@@ -1109,8 +1114,7 @@ function M.return_doctor(index, id)
         previous.player.teleport(previous.position, previous.surface)
       end
       anchor.destroy()
-      return false,
-        'Эвакуация не завершена. Отправка отменена; освободите площадку на Наувисе.'
+      return false, { 'tardis-ship.evacuation-failed' }
     end
   end
   ok, why = Voyage.mark_returned(f)
@@ -1130,7 +1134,8 @@ function M.return_doctor(index, id)
   f.force.chart(nauvis, { { at.x - 24, at.y - 24 }, { at.x + 24, at.y + 24 } })
   f.force.print({
     '',
-    'Доктор оставил пространственный якорь: завод, комнаты и склад сохранены на Наувисе. Откройте якорь, чтобы войти. Око улетело с кораблём — постройте собственный источник питания. [gps=',
+    { 'tardis-ship.anchor-left' },
+    ' [gps=',
     at.x,
     ',',
     at.y,

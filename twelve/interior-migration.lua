@@ -123,8 +123,10 @@ function T.move(f, old_position, new_position)
       s.set_tiles(tiles, true)
     end
     f.room_layout_version = 1
-    f.room_layout_error = tostring(reason)
-    return false, tostring(reason)
+    -- Messages are LocalisedStrings (tables); Lua runtime errors are strings.
+    local message = type(reason) == 'table' and reason or tostring(reason)
+    f.room_layout_error = message
+    return false, message
   end
   -- Preflight all destinations before a single tile is written.
   for slot, room in pairs(f.rooms or {}) do
@@ -135,12 +137,12 @@ function T.move(f, old_position, new_position)
       for x = to.x - 12, to.x + 11 do
         for y = to.y - 10, to.y + 9 do
           if Chunks.name(s, x, y) ~= 'out-of-map' then
-            return false, 'Северный отсек ' .. slot .. ' уже занят плиткой.'
+            return false, { 'tardis-interior.migration-slot-tiles', slot }
           end
         end
       end
       if s.count_entities_filtered({ area = bounds(to) }) > 0 then
-        return false, 'Северный отсек ' .. slot .. ' уже занят объектами.'
+        return false, { 'tardis-interior.migration-slot-entities', slot }
       end
       for _, e in ipairs(s.find_entities_filtered({ area = bounds(from) })) do
         local box = e.bounding_box
@@ -153,20 +155,19 @@ function T.move(f, old_position, new_position)
             or box.right_bottom.y > from.y + 10
           )
         then
-          return false,
-            'Объект '
-              .. e.name
-              .. ' пересекает границу отсека '
-              .. slot
-              .. '; сдвиньте его внутрь перед перестройкой.'
+          return false, { 'tardis-interior.migration-entity-crosses-border', e.name, slot }
         end
         if contains(from, e.position) then
           if e.type == 'character' then
-            actors[#actors + 1] =
-              { entity = e, player = e.player, from = e.position, to = {
+            actors[#actors + 1] = {
+              entity = e,
+              player = e.player,
+              from = e.position,
+              to = {
                 e.position.x + to.x - from.x,
                 e.position.y + to.y - from.y,
-              } }
+              },
+            }
           else
             if
               e.type == 'locomotive'
@@ -174,20 +175,14 @@ function T.move(f, old_position, new_position)
               or e.type == 'fluid-wagon'
               or e.type == 'artillery-wagon'
             then
-              return false,
-                'В отсеке '
-                  .. slot
-                  .. ' стоит поезд; его необходимо убрать перед перестройкой.'
+              return false, { 'tardis-interior.migration-train', slot }
             end
             if (e.type == 'car' or e.type == 'spider-vehicle') and (e.get_driver() or e.get_passenger()) then
-              return false,
-                'В отсеке '
-                  .. slot
-                  .. ' есть транспорт с пассажиром; выйдите из него перед перестройкой.'
+              return false, { 'tardis-interior.migration-vehicle-passenger', slot }
             end
             local k = key(e)
             if originals[k] then
-              return false, 'Объект пересекает несколько отсеков.'
+              return false, { 'tardis-interior.migration-entity-multiple' }
             end
             originals[k] = e
             ownership[k] = slot
@@ -212,29 +207,25 @@ function T.move(f, old_position, new_position)
       for _, list in pairs(neighbours) do
         for _, other in pairs(list) do
           if crossing(e, other) then
-            return false,
-              'Отсоедините конвейеры между комнатой и старым коридором перед перестройкой.'
+            return false, { 'tardis-interior.migration-disconnect-belts' }
           end
         end
       end
       if e.type == 'underground-belt' and crossing(e, e.neighbours) then
-        return false,
-          'Отсоедините подземный конвейер через границу комнаты перед перестройкой.'
+        return false, { 'tardis-interior.migration-disconnect-underground' }
       end
     end
     for i = 1, #e.fluidbox do
       for _, connection in ipairs(e.fluidbox.get_pipe_connections(i)) do
         if connection.target and crossing(e, connection.target.owner) then
-          return false,
-            'Отсоедините трубы между комнатой и старым коридором перед перестройкой.'
+          return false, { 'tardis-interior.migration-disconnect-pipes' }
         end
       end
     end
     if e.type == 'heat-pipe' or e.type == 'reactor' then
       for _, other in pairs(e.neighbours or {}) do
         if crossing(e, other) then
-          return false,
-            'Отсоедините теплопровод через границу комнаты перед перестройкой.'
+          return false, { 'tardis-interior.migration-disconnect-heat' }
         end
       end
     end
@@ -304,11 +295,13 @@ function T.move(f, old_position, new_position)
     context = nil
     for k, e in pairs(originals) do
       local clone = transaction.clones[k]
-      assert(valid(clone), 'Не скопирован объект ' .. e.name)
-      assert(
-        same_snapshot(snapshots[k], snapshot(clone)),
-        'Не совпало содержимое объекта ' .. e.name
-      )
+      -- assert() only accepts string messages; raise LocalisedStrings with error().
+      if not valid(clone) then
+        error({ 'tardis-interior.migration-clone-missing', e.name }, 0)
+      end
+      if not same_snapshot(snapshots[k], snapshot(clone)) then
+        error({ 'tardis-interior.migration-clone-mismatch', e.name }, 0)
+      end
     end
     -- Internal and external red/green/copper links are preserved. Rearranging a
     -- spatial room may stretch a pre-existing wire beyond ordinary building reach.
@@ -318,12 +311,13 @@ function T.move(f, old_position, new_position)
       if valid(source) and valid(target) then
         local a = source.get_wire_connector(wire.id, true)
         local b = target.get_wire_connector(wire.target_id, true)
-        assert(a and b, 'Пропал разъём логической сети')
+        if not (a and b) then
+          error({ 'tardis-interior.migration-wire-connector-lost' }, 0)
+        end
         if not a.is_connected_to(b, wire.origin) then
-          assert(
-            a.connect_to(b, false, wire.origin),
-            'Не восстановлен провод логической сети'
-          )
+          if not a.connect_to(b, false, wire.origin) then
+            error({ 'tardis-interior.migration-wire-not-restored' }, 0)
+          end
         end
       end
     end
@@ -334,7 +328,9 @@ function T.move(f, old_position, new_position)
         actor.player.driving = false
       end
       local who = actor.player or actor.entity
-      assert(who.teleport(actor.to, s), 'Не удалось перенести персонажа')
+      if not who.teleport(actor.to, s) then
+        error({ 'tardis-interior.migration-character-not-moved' }, 0)
+      end
     end
   end)
   context = nil

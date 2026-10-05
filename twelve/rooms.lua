@@ -3,10 +3,10 @@ local R = { build_ticks = 600, max_rooms = 6, parents = { [3] = 1, [4] = 1, [5] 
 R.order = { 'workshop', 'vault', 'library' }
 R.plans = {
   workshop = {
-    title = 'Мастерская',
+    title = { 'tardis-interior.room-workshop-title' },
     icon = 'assembling-machine-2',
-    subtitle = 'Промышленный модуль',
-    description = 'Свободный зал для машин и конвейеров. Освещение и общая энергосеть уже подключены.',
+    subtitle = { 'tardis-interior.room-workshop-subtitle' },
+    description = { 'tardis-interior.room-workshop-description' },
     cost = {
       { name = 'iron-plate', count = 400 },
       { name = 'steel-plate', count = 200 },
@@ -15,21 +15,25 @@ R.plans = {
     },
   },
   vault = {
-    title = 'Складской модуль',
+    title = { 'tardis-interior.room-vault-title' },
     icon = 'steel-chest',
-    subtitle = 'Пространственный буфер',
-    description = '+4096 ячеек общего склада. Внутри — терминал и место для ваших сундуков.',
+    subtitle = { 'tardis-interior.room-vault-subtitle' },
+    description = { 'tardis-interior.room-vault-description' },
     slots = 4096,
-    cost = { { name = 'iron-plate', count = 250 }, { name = 'steel-plate', count = 150 }, {
-      name = 'electronic-circuit',
-      count = 100,
-    } },
+    cost = {
+      { name = 'iron-plate', count = 250 },
+      { name = 'steel-plate', count = 150 },
+      {
+        name = 'electronic-circuit',
+        count = 100,
+      },
+    },
   },
   library = {
-    title = 'Библиотека',
+    title = { 'tardis-interior.room-library-title' },
     icon = 'wood',
-    subtitle = 'Тихое крыло корабля',
-    description = 'Зал с архивными шкафами, латунным полом и круглыми панелями. Шкафы хранят предметы, центр свободен для обустройства.',
+    subtitle = { 'tardis-interior.room-library-subtitle' },
+    description = { 'tardis-interior.room-library-description' },
     cost = {
       { name = 'wood', count = 150 },
       { name = 'steel-plate', count = 50 },
@@ -93,18 +97,17 @@ end
 function R.available(f, slot)
   slot = tonumber(slot)
   if not f or not slot or slot % 1 ~= 0 or slot < 1 or slot > R.max_rooms then
-    return false, 'Выберите отсек.'
+    return false, { 'tardis-interior.choose-compartment' }
   end
   if f.rooms and f.rooms[slot] then
-    return false, 'Этот отсек уже занят.'
+    return false, { 'tardis-interior.compartment-occupied' }
   end
   local parent = R.parents[slot]
   if f.room_layout_version ~= 1 and parent and not (f.rooms[parent] and f.rooms[parent].state == 'ready') then
-    return false, 'Сначала постройте родительский отсек ' .. parent .. '.'
+    return false, { 'tardis-interior.build-parent-first', parent }
   end
   if not floor_available(f, slot) then
-    return false,
-      'Место комнаты занято существующими постройками или плиткой.'
+    return false, { 'tardis-interior.room-site-blocked' }
   end
   return true
 end
@@ -112,10 +115,10 @@ function R.request(p, f, slot, kind, move)
   R.init(f)
   slot = tonumber(slot)
   if not p or p.force ~= f.force or (p.physical_surface ~= f.surface and p.physical_surface ~= f.eye_surface) then
-    return false, 'Строительство доступно изнутри Тардис.'
+    return false, { 'tardis-interior.build-from-inside' }
   end
   if not slot or slot % 1 ~= 0 or slot < 1 or slot > R.max_rooms or not R.plans[kind] then
-    return false, 'Выберите свободный отсек и проект комнаты.'
+    return false, { 'tardis-interior.choose-free-compartment' }
   end
   local available, why = R.available(f, slot)
   if not available then
@@ -123,7 +126,7 @@ function R.request(p, f, slot, kind, move)
   end
   local plan = R.plans[kind]
   if #R.missing(f, kind) > 0 then
-    return false, 'На складе недостаточно материалов обычного качества.'
+    return false, { 'tardis-interior.not-enough-materials' }
   end
   local reserved = 0
   for _, v in pairs(f.rooms) do
@@ -132,7 +135,7 @@ function R.request(p, f, slot, kind, move)
     end
   end
   if plan.slots and #f.cargo + reserved >= 32768 then
-    return false, 'Склад уже достиг предельной ёмкости.'
+    return false, { 'tardis-interior.warehouse-full' }
   end
   -- Move only ordinary construction materials to persistent escrow. The event is atomic.
   local slots = 0
@@ -149,8 +152,7 @@ function R.request(p, f, slot, kind, move)
   f.rooms[slot] =
     { kind = kind, state = 'building', started = game.tick, finish = game.tick + R.build_ticks, escrow = escrow }
   f.room_revision = f.room_revision + 1
-  return true,
-    'Архитектурная система: комната формируется. Готовность через 10 секунд.'
+  return true, { 'tardis-interior.room-forming' }
 end
 function R.cancel(p, f, slot, move)
   local room = f.rooms and f.rooms[slot]
@@ -161,21 +163,19 @@ function R.cancel(p, f, slot, move)
     or not room
     or room.state ~= 'building'
   then
-    return false,
-      'Отменять можно только строящуюся комнату изнутри Тардис.'
+    return false, { 'tardis-interior.cancel-only-building' }
   end
   move(room.escrow, f.cargo)
   if not room.escrow.is_empty() then
     room.state = 'refund'
     room.finish = nil
     f.room_revision = f.room_revision + 1
-    return true,
-      'Строительство отменено. Возврат оставшихся ресурсов продолжится, когда на складе появится место.'
+    return true, { 'tardis-interior.cancel-refund-pending' }
   end
   room.escrow.destroy()
   f.rooms[slot] = nil
   f.room_revision = f.room_revision + 1
-  return true, 'Строительство отменено. Материалы возвращены на склад.'
+  return true, { 'tardis-interior.cancel-refunded' }
 end
 local function construct(f, slot, room)
   local p = R.position(slot, f)
@@ -192,13 +192,7 @@ local function construct(f, slot, room)
   room.finish = nil
   f.force.chart(s, { { p.x - 13, p.y - 11 }, { p.x + 13, p.y + 11 } })
   f.room_revision = f.room_revision + 1
-  f.force.print(
-    'ТАРДИС XII: отсек '
-      .. slot
-      .. ' — '
-      .. R.plans[room.kind].title
-      .. ' готов. Вход через северное дерево комнат.'
-  )
+  f.force.print({ 'tardis-interior.room-ready', slot, R.plans[room.kind].title })
 end
 function R.tick(f, move)
   R.init(f)

@@ -12,15 +12,12 @@ script.on_configuration_changed(function(e)
   end
 end)
 script.on_event(defines.events.on_player_created, M.starter)
-script.on_event(
-  {
-    defines.events.on_built_entity,
-    defines.events.on_robot_built_entity,
-    defines.events.script_raised_built,
-    defines.events.script_raised_revive,
-  },
-  M.built
-)
+script.on_event({
+  defines.events.on_built_entity,
+  defines.events.on_robot_built_entity,
+  defines.events.script_raised_built,
+  defines.events.script_raised_revive,
+}, M.built)
 script.on_event({ defines.events.on_player_mined_entity, defines.events.on_robot_mined_entity }, M.mined)
 script.on_event({ defines.events.on_entity_died, defines.events.script_raised_destroy }, M.died)
 script.on_event(defines.events.on_pre_surface_deleted, M.surface_deleted)
@@ -56,7 +53,7 @@ script.on_event(defines.events.on_lua_shortcut, function(e)
     UI.shortcut(e)
   end
 end)
-commands.add_command('tardis', 'Выдать Тардис / open / demo', function(e)
+commands.add_command('tardis', { 'tardis-ship.command-help' }, function(e)
   local p = e.player_index and game.get_player(e.player_index)
   if not p then
     return

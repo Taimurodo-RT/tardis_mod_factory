@@ -6,9 +6,9 @@ local V =
 V.order = { 'console', 'eye', 'stabilizer' }
 V.plans = {
   console = {
-    title = 'Матрица управления',
+    title = { 'tardis-voyage.plan-console-title' },
     icon = 'electronic-circuit',
-    description = 'Починить повреждённую кораблём инженера консоль и восстановить сообщение Доктора.',
+    description = { 'tardis-voyage.plan-console-description' },
     cost = {
       { name = 'iron-plate', count = 100 },
       { name = 'copper-plate', count = 50 },
@@ -17,11 +17,11 @@ V.plans = {
     },
   },
   eye = {
-    title = 'Око Гармонии',
+    title = { 'tardis-voyage.plan-eye-title' },
     icon = 'nuclear-reactor',
     previous = 'console',
     technology = 'chemical-science-pack',
-    description = 'Спуститесь через люк и восстановите четыре энергомашины у звезды. Выработка растёт по мере ремонта: 0 → 20 → 40 → 50 МВт.',
+    description = { 'tardis-voyage.plan-eye-description' },
     cost = {
       { name = 'steel-plate', count = 200 },
       { name = 'advanced-circuit', count = 100 },
@@ -30,11 +30,11 @@ V.plans = {
     },
   },
   stabilizer = {
-    title = 'Пространственный стабилизатор',
+    title = { 'tardis-voyage.plan-stabilizer-title' },
     icon = 'quantum-processor',
     previous = 'eye',
     technology = 'promethium-science-pack',
-    description = 'Вернуть полную целостность кораблю. Открывает последний перелёт к Разрушенной планете и возвращение Доктору.',
+    description = { 'tardis-voyage.plan-stabilizer-description' },
     cost = {
       { name = 'tungsten-plate', count = 100 },
       { name = 'holmium-plate', count = 100 },
@@ -44,8 +44,7 @@ V.plans = {
     },
   },
 }
-V.doctor_message =
-  'Если вы слышите это, вы уже познакомились с моей ТАРДИС. Судя по повреждениям, знакомство было громким. Почините Око Гармонии и пространственный стабилизатор. Затем отыщите Разрушенную планету за границей этой солнечной системы: там ещё держится след моей временной линии. Отправьте её по этому следу. И, пожалуйста, выйдите перед отправкой. — Доктор'
+V.doctor_message = { 'tardis-voyage.doctor-message' }
 local function valid(e)
   return e and e.valid
 end
@@ -61,8 +60,14 @@ local function energy(f)
 end
 function V.ensure(f, legacy)
   if not f.voyage then
-    f.voyage =
-      { console = legacy == true, eye = legacy == true, stabilizer = false, message = legacy == true, returned = false, revision = 1 }
+    f.voyage = {
+      console = legacy == true,
+      eye = legacy == true,
+      stabilizer = false,
+      message = legacy == true,
+      returned = false,
+      revision = 1,
+    }
     -- Existing ships keep their working generator and reserve. A new wreck has no free reactor.
     if not legacy then
       f.energy = math.min(f.energy or 0, 100e6)
@@ -74,18 +79,16 @@ end
 function V.can_fly(f)
   local q = V.ensure(f, false)
   if q.returned then
-    return false, 'ТАРДИС уже возвращена Доктору.'
+    return false, { 'tardis-voyage.already-returned' }
   end
   if not q.console then
-    return false,
-      'Сначала восстановите матрицу управления во вкладке «Восстановление».'
+    return false, { 'tardis-voyage.need-console' }
   end
   if not q.eye then
-    return false,
-      'Для полёта восстановите все четыре энергомашины нижнего зала Ока Гармонии.'
+    return false, { 'tardis-voyage.need-eye' }
   end
   if f.flight then
-    return false, 'ТАРДИС уже в полёте.'
+    return false, { 'tardis-voyage.already-flying' }
   end
   return true
 end
@@ -189,23 +192,23 @@ function V.quote(f, target)
   local origin = V.origin(f)
   local q = { ok = false, origin = origin, target = destination, cost = 0, distance = 0, path = {} }
   if not destination or not game.planets[destination] then
-    q.error = 'Выберите поверхность планеты.'
+    q.error = { 'tardis-voyage.quote-select-surface' }
     return q
   end
   if not origin then
-    q.error = 'Не удалось определить планету последней посадки.'
+    q.error = { 'tardis-voyage.quote-no-origin' }
     return q
   end
   local distance, path = V.distance(origin, destination)
   if not distance then
-    q.error = 'Между планетами нет известного космического маршрута.'
+    q.error = { 'tardis-voyage.quote-no-route' }
     return q
   end
   q.distance = distance
   q.path = path
   q.cost = math.ceil(V.base_cost + distance * V.joules_per_km)
   if not V.is_unlocked(f.force, destination) then
-    q.error = 'Планета ещё не открыта исследованиями вашей команды.'
+    q.error = { 'tardis-voyage.quote-not-unlocked' }
     return q
   end
   local fly, reason = V.can_fly(f)
@@ -214,15 +217,11 @@ function V.quote(f, target)
     return q
   end
   if destination == V.final_location and not f.voyage.stabilizer then
-    q.error =
-      'Для полёта к Разрушенной планете восстановите пространственный стабилизатор.'
+    q.error = { 'tardis-voyage.quote-need-stabilizer' }
     return q
   end
   if energy(f) < q.cost then
-    q.error = string.format(
-      'Недостаточно энергии: нужно %.1f МДж. Отключите отдачу в сеть и дождитесь зарядки.',
-      q.cost / 1e6
-    )
+    q.error = { 'tardis-voyage.quote-no-energy', string.format('%.1f', q.cost / 1e6) }
     return q
   end
   q.ok = true
@@ -246,35 +245,34 @@ function V.repair_ready(f, key)
   local state = V.ensure(f, false)
   local plan = V.plans[key]
   if not plan then
-    return false, 'Неизвестный узел корабля.'
+    return false, { 'tardis-voyage.repair-unknown-node' }
   end
   if state.returned then
-    return false, 'ТАРДИС уже возвращена Доктору.'
+    return false, { 'tardis-voyage.already-returned' }
   end
   if f.flight then
-    return false, 'Завершите перелёт перед ремонтом.'
+    return false, { 'tardis-voyage.repair-finish-flight' }
   end
   if state[key] then
-    return false, 'Этот узел уже восстановлен.'
+    return false, { 'tardis-voyage.repair-already-done' }
   end
   if key == 'eye' then
-    return false,
-      'Спуститесь через люк к Оку и ремонтируйте каждую энергомашину рядом с ней. Сводная починка с консоли недоступна.'
+    return false, { 'tardis-voyage.repair-eye-on-site' }
   end
   if plan.previous and not state[plan.previous] then
-    return false, 'Сначала восстановите предыдущий узел корабля.'
+    return false, { 'tardis-voyage.repair-need-previous' }
   end
   if plan.technology then
     local tech = f.force.technologies[plan.technology]
     if not tech or not tech.researched then
       return false,
-        plan.technology == 'promethium-science-pack'
-            and 'Сначала исследуйте прометиевую науку и границу солнечной системы.'
-          or 'Сначала исследуйте химическую науку.'
+        plan.technology == 'promethium-science-pack' and { 'tardis-voyage.repair-need-promethium-edge' } or {
+          'tardis-voyage.repair-need-chemical',
+        }
     end
   end
   if #V.missing(f, key) > 0 then
-    return false, 'На складе недостаточно материалов обычного качества.'
+    return false, { 'tardis-voyage.repair-missing-materials' }
   end
   return true
 end
@@ -285,7 +283,7 @@ function V.repair(player, f, key)
     or player.force ~= f.force
     or (player.physical_surface ~= f.surface and player.physical_surface ~= f.eye_surface)
   then
-    return false, 'Восстановление доступно только изнутри своей ТАРДИС.'
+    return false, { 'tardis-voyage.repair-inside-only' }
   end
   local ok, reason = V.repair_ready(f, key)
   if not ok then
@@ -300,35 +298,30 @@ function V.repair(player, f, key)
   f.voyage.revision = f.voyage.revision + 1
   if key == 'console' then
     f.voyage.message = true
-    f.force.print(
-      '[color=120,205,230]Восстановленная запись Доктора[/color]\n' .. V.doctor_message
-    )
-    return true,
-      'Матрица восстановлена. Сообщение Доктора расшифровано; теперь восстановите Око Гармонии.'
+    f.force.print({ '', { 'tardis-voyage.recovered-record-heading' }, '\n', V.doctor_message })
+    return true, { 'tardis-voyage.repair-console-done' }
   end
-  return true,
-    'Корабль полностью восстановлен. Последняя цель — Разрушенная планета за границей солнечной системы.'
+  return true, { 'tardis-voyage.repair-ship-done' }
 end
 function V.return_ready(f)
   local state = V.ensure(f, false)
   if state.returned then
-    return false, 'ТАРДИС уже возвращена Доктору.'
+    return false, { 'tardis-voyage.already-returned' }
   end
   if not state.console or not state.eye or not state.stabilizer then
-    return false, 'Перед отправкой полностью восстановите ТАРДИС.'
+    return false, { 'tardis-voyage.return-need-full-repair' }
   end
   if f.flight then
-    return false, 'Дождитесь посадки.'
+    return false, { 'tardis-voyage.return-wait-landing' }
   end
   if V.origin(f) ~= V.final_location or not valid(f.box) then
-    return false,
-      'Отправка Доктору возможна только после посадки на Разрушенной планете.'
+    return false, { 'tardis-voyage.return-need-shattered-planet' }
   end
   if not V.is_unlocked(f.force, V.final_location) then
-    return false, 'Сначала исследуйте прометиевую науку.'
+    return false, { 'tardis-voyage.return-need-promethium' }
   end
   if energy(f) < V.return_cost then
-    return false, 'Для возвращения по временной линии нужен резерв 1 ГДж.'
+    return false, { 'tardis-voyage.return-need-energy' }
   end
   return true
 end
@@ -341,10 +334,8 @@ function V.mark_returned(f)
   f.voyage.returned = true
   f.voyage.returned_tick = game.tick
   f.voyage.revision = f.voyage.revision + 1
-  f.force.print(
-    '[color=120,205,230]Сообщение Доктора[/color]\nВот она. Моя невозможная девочка, снова дома. Спасибо, инженер. Берегите свою планету. И на этот раз смотрите, куда приземляетесь.\nИстория «Возвращение ТАРДИС» завершена.'
-  )
-  return true, 'ТАРДИС возвращена Доктору. История завершена.'
+  f.force.print({ 'tardis-voyage.return-doctor-farewell' })
+  return true, { 'tardis-voyage.return-done' }
 end
 function V.info(f)
   local q = V.ensure(f, false)
@@ -355,11 +346,11 @@ function V.info(f)
       break
     end
   end
-  local stage = q.returned and 'Возвращена Доктору'
-    or q.stabilizer and 'Курс на Разрушенную планету'
-    or q.eye and 'Восстановить стабилизатор'
-    or q.console and 'Восстановить Око Гармонии'
-    or 'Повреждена при крушении'
+  local stage = q.returned and { 'tardis-voyage.stage-returned' }
+    or q.stabilizer and { 'tardis-voyage.stage-course-shattered' }
+    or q.eye and { 'tardis-voyage.stage-repair-stabilizer' }
+    or q.console and { 'tardis-voyage.stage-repair-eye' }
+    or { 'tardis-voyage.stage-crashed' }
   return {
     stage = stage,
     next_repair = next_repair,
@@ -367,8 +358,7 @@ function V.info(f)
     eye = q.eye,
     stabilizer = q.stabilizer,
     returned = q.returned,
-    message = q.message and V.doctor_message
-      or 'Сигнал повреждён. Восстановите матрицу управления, чтобы прочитать сообщение.',
+    message = q.message and V.doctor_message or { 'tardis-voyage.doctor-message-damaged' },
     recharge = V.recharge(f),
     eye_modules = Core.count(f),
     origin = V.origin(f),

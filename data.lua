@@ -21,11 +21,14 @@ local function port(name, base, tint)
       type = 'recipe',
       name = name,
       enabled = true,
-      ingredients = { { type = 'item', name = 'steel-plate', amount = 4 }, {
-        type = 'item',
-        name = 'electronic-circuit',
-        amount = 2,
-      } },
+      ingredients = {
+        { type = 'item', name = 'steel-plate', amount = 4 },
+        {
+          type = 'item',
+          name = 'electronic-circuit',
+          amount = 2,
+        },
+      },
       results = { { type = 'item', name = name, amount = 1 } },
     },
   })
@@ -96,7 +99,14 @@ data:extend({
     scale = 0.34,
     shift = { 0, -1.05 },
   },
-  { type = 'sprite', name = 'tardis-library-room', filename = P .. 'library-room.png', width = 1536, height = 1280, scale = 0.5 },
+  {
+    type = 'sprite',
+    name = 'tardis-library-room',
+    filename = P .. 'library-room.png',
+    width = 1536,
+    height = 1280,
+    scale = 0.5,
+  },
   { type = 'sprite', name = 'tardis-room', filename = P .. 'room.png', width = 1536, height = 1536, scale = 0.75 },
   { type = 'custom-input', name = 'tardis-control', key_sequence = 'CONTROL + T', consuming = 'none' },
   {
@@ -135,7 +145,14 @@ exit.collision_mask = { layers = {} }
 exit.selection_box = { { -1.7, -3.5 }, { 1.7, 1 } }
 data:extend({
   exit,
-  { type = 'sprite', name = 'tardis-circular-rim', filename = P .. 'circular-rim.png', width = 1536, height = 1536, scale = 0.65 },
+  {
+    type = 'sprite',
+    name = 'tardis-circular-rim',
+    filename = P .. 'circular-rim.png',
+    width = 1536,
+    height = 1536,
+    scale = 0.65,
+  },
 })
 data:extend({
   {

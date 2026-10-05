@@ -4,10 +4,10 @@
 local Core = { range = 6, order = { 'containment', 'collector_a', 'collector_b', 'converter' } }
 Core.plans = {
   containment = {
-    title = 'Контур удержания',
+    title = { 'tardis-eye.containment-title' },
     icon = 'nuclear-reactor',
-    bearing = 'Север',
-    description = 'Стабилизирует звезду. Сам не вырабатывает энергию; открывает ремонт двух коллекторов.',
+    bearing = { 'tardis-eye.bearing-north' },
+    description = { 'tardis-eye.containment-description' },
     cost = {
       { name = 'steel-plate', count = 80 },
       { name = 'advanced-circuit', count = 20 },
@@ -16,11 +16,11 @@ Core.plans = {
     },
   },
   collector_a = {
-    title = 'Коллектор A',
+    title = { 'tardis-eye.collector-a-title' },
     icon = 'heat-exchanger',
-    bearing = 'Запад',
+    bearing = { 'tardis-eye.bearing-west' },
     previous = { 'containment' },
-    description = 'Собирает излучение удерживаемой звезды. Исправный коллектор добавляет 20 МВт.',
+    description = { 'tardis-eye.collector-a-description' },
     cost = {
       { name = 'steel-plate', count = 40 },
       { name = 'advanced-circuit', count = 30 },
@@ -29,11 +29,11 @@ Core.plans = {
     },
   },
   collector_b = {
-    title = 'Коллектор B',
+    title = { 'tardis-eye.collector-b-title' },
     icon = 'heat-exchanger',
-    bearing = 'Восток',
+    bearing = { 'tardis-eye.bearing-east' },
     previous = { 'containment' },
-    description = 'Второй независимый канал съёма энергии. Исправный коллектор добавляет ещё 20 МВт.',
+    description = { 'tardis-eye.collector-b-description' },
     cost = {
       { name = 'steel-plate', count = 40 },
       { name = 'advanced-circuit', count = 30 },
@@ -42,11 +42,11 @@ Core.plans = {
     },
   },
   converter = {
-    title = 'Преобразователь',
+    title = { 'tardis-eye.converter-title' },
     icon = 'substation',
-    bearing = 'Юг',
+    bearing = { 'tardis-eye.bearing-south' },
     previous = { 'collector_a', 'collector_b' },
-    description = 'Согласует два канала с общим резервом. Добавляет 10 МВт, доводит отдачу до 50 МВт и разрешает полёт.',
+    description = { 'tardis-eye.converter-description' },
     cost = {
       { name = 'steel-plate', count = 40 },
       { name = 'advanced-circuit', count = 20 },
@@ -105,25 +105,24 @@ function Core.recharge(f)
 end
 function Core.near(player, f, key)
   if not Core.plans[key] then
-    return false, 'Выберите энергомашину.'
+    return false, { 'tardis-eye.select-machine' }
   end
   if not player or not player.valid or player.force ~= f.force then
-    return false, 'Это энергомашина другой команды.'
+    return false, { 'tardis-eye.other-team-machine' }
   end
   if not valid(player.character) then
-    return false, 'Для ремонта нужен персонаж возле энергомашины.'
+    return false, { 'tardis-eye.need-character' }
   end
   if not valid(f.eye_surface) or player.physical_surface ~= f.eye_surface then
-    return false, 'Спуститесь через люк консольного зала к Оку Гармонии.'
+    return false, { 'tardis-eye.go-down-hatch' }
   end
   local entity = f.eye_modules and f.eye_modules[key]
   if not valid(entity) or entity.surface ~= f.eye_surface or entity.force ~= f.force then
-    return false, 'Энергомашина недоступна. Обновите помещение корабля.'
+    return false, { 'tardis-eye.machine-unavailable' }
   end
   local p, b = player.physical_position, entity.position
   if (p.x - b.x) ^ 2 + (p.y - b.y) ^ 2 > Core.range ^ 2 then
-    return false,
-      'Подойдите к выбранной энергомашине на расстояние не более 6 клеток.'
+    return false, { 'tardis-eye.move-closer' }
   end
   return true
 end
@@ -145,7 +144,7 @@ function Core.repair_ready(f, key, player)
   local state = Core.ensure(f)
   local plan = Core.plans[key]
   if not plan then
-    return false, 'Выберите энергомашину.'
+    return false, { 'tardis-eye.select-machine' }
   end
   if player then
     local near, reason = Core.near(player, f, key)
@@ -154,29 +153,28 @@ function Core.repair_ready(f, key, player)
     end
   end
   if not f.voyage or not f.voyage.console then
-    return false, 'Сначала восстановите матрицу управления.'
+    return false, { 'tardis-eye.need-console' }
   end
   if f.voyage.returned then
-    return false, 'Око уже отправлено Доктору.'
+    return false, { 'tardis-eye.eye-returned' }
   end
   if f.flight then
-    return false, 'Дождитесь окончания полёта перед ремонтом.'
+    return false, { 'tardis-eye.wait-flight' }
   end
   if state.modules[key] then
-    return false, 'Эта энергомашина уже восстановлена.'
+    return false, { 'tardis-eye.already-restored' }
   end
   local tech = f.force.technologies['chemical-science-pack']
   if not tech or not tech.researched then
-    return false, 'Сначала исследуйте химическую науку.'
+    return false, { 'tardis-eye.need-chemical-science' }
   end
   for _, previous in ipairs(plan.previous or {}) do
     if not state.modules[previous] then
-      return false, 'Сначала восстановите узел: ' .. Core.plans[previous].title .. '.'
+      return false, { 'tardis-eye.need-previous', Core.plans[previous].title }
     end
   end
   if #Core.missing(f, key) > 0 then
-    return false,
-      'На общем складе недостаточно материалов обычного качества.'
+    return false, { 'tardis-eye.not-enough-materials' }
   end
   return true
 end
@@ -199,14 +197,11 @@ function Core.repair(player, f, key)
   state.revision = state.revision + 1
   Core.ensure(f)
   f.voyage.revision = (f.voyage.revision or 0) + 1
-  local message = Core.plans[key].title
-    .. ' восстановлен. Отдача Ока: '
-    .. math.floor(Core.recharge(f) / 1e6)
-    .. ' МВт.'
-  if f.voyage.eye then
-    message = message
-      .. ' Все четыре энергомашины исправны; полёты доступны.'
-  end
+  local message = {
+    f.voyage.eye and 'tardis-eye.repaired-all' or 'tardis-eye.repaired',
+    Core.plans[key].title,
+    tostring(math.floor(Core.recharge(f) / 1e6)),
+  }
   return true, message
 end
 return Core

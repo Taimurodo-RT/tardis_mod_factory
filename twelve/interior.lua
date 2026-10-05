@@ -81,11 +81,17 @@ local function center_floor(x, y)
   return 'tardis-steel-floor'
 end
 
-local tree =
-  { { x = -16, y = -40 }, { x = 16, y = -40 }, { x = -48, y = -76 }, { x = -16, y = -76 }, { x = 16, y = -76 }, {
+local tree = {
+  { x = -16, y = -40 },
+  { x = 16, y = -40 },
+  { x = -48, y = -76 },
+  { x = -16, y = -76 },
+  { x = 16, y = -76 },
+  {
     x = 48,
     y = -76,
-  } }
+  },
+}
 local parents = { [3] = 1, [4] = 1, [5] = 2, [6] = 2 }
 local function old_position(slot)
   return { x = 56 + 28 * ((slot - 1) % 3), y = slot <= 3 and -18 or 18 }
@@ -253,6 +259,22 @@ function I.room(f, slot, room, legacy)
   f.force.chart(s, { { p.x - 13, p.y - 11 }, { p.x + 13, p.y + 11 } })
 end
 
+-- Layout errors are LocalisedStrings (tables), or plain strings from old saves
+-- and Lua runtime errors; compare by value so a repeated failure stays quiet.
+local function same_message(a, b)
+  if type(a) ~= 'table' or type(b) ~= 'table' then
+    return a == b
+  end
+  if #a ~= #b then
+    return false
+  end
+  for i = 1, #a do
+    if not same_message(a[i], b[i]) then
+      return false
+    end
+  end
+  return true
+end
 function I.apply(f)
   if not (f.surface and f.surface.valid) then
     return
@@ -276,17 +298,12 @@ function I.apply(f)
     end)
     if not ok then
       f.room_layout_version = 1
-      if previous_error ~= why then
-        f.force.print(
-          'ТАРДИС: северная перестройка отложена. Старые отсеки полностью сохранены. '
-            .. why
-        )
+      if not same_message(previous_error, why) then
+        f.force.print({ 'tardis-interior.relayout-postponed', why })
       end
       f.room_layout_error = why
     elseif next(f.rooms or {}) then
-      f.force.print(
-        'ТАРДИС: отсеки перенесены в северное дерево комнат. Содержимое, машины и логические провода сохранены.'
-      )
+      f.force.print({ 'tardis-interior.relayout-done' })
     end
   end
   if f.interior_revision ~= I.revision then

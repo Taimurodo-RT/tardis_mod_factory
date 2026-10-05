@@ -11,22 +11,30 @@ local function state(p)
   return root().players[p.index]
 end
 local systems = {
-  { panel = 'navigation', title = 'Навигация', code = '01' },
-  { panel = 'warehouse', title = 'Хранилище', code = '02' },
-  { panel = 'reactor', title = 'Энергия', code = '03' },
-  { panel = 'ports', title = 'Шлюзы / Сеть', code = '04' },
-  { panel = 'rooms', title = 'Архитектура', code = '05' },
-  { panel = 'restoration', title = 'Ремонт', heading = 'Хроника корабля', code = '06' },
-  { panel = 'eye', title = 'Око Гармонии', code = '07' },
+  { panel = 'navigation', title = { 'tardis-ui.system-navigation' }, code = '01' },
+  { panel = 'warehouse', title = { 'tardis-ui.system-warehouse' }, code = '02' },
+  { panel = 'reactor', title = { 'tardis-ui.system-energy' }, code = '03' },
+  { panel = 'ports', title = { 'tardis-ui.system-ports' }, code = '04' },
+  { panel = 'rooms', title = { 'tardis-ui.system-rooms' }, code = '05' },
+  {
+    panel = 'restoration',
+    title = { 'tardis-ui.system-restoration' },
+    heading = { 'tardis-ui.system-restoration-heading' },
+    code = '06',
+  },
+  { panel = 'eye', title = { 'tardis-ui.system-eye' }, code = '07' },
 }
 local function dimensions(p)
   local width = p.display_resolution.width / p.display_scale
   local height = p.display_resolution.height / p.display_scale
   local pane = math.min(820, math.max(640, width - 220))
-  return { rail = 148, pane = pane, content = pane - 24, width = pane + 188, height = math.max(
-    440,
-    math.min(840, height - 32)
-  ) }
+  return {
+    rail = 148,
+    pane = pane,
+    content = pane - 24,
+    width = pane + 188,
+    height = math.max(440, math.min(840, height - 32)),
+  }
 end
 local function canvas(element)
   local p = game.get_player(element.player_index)
@@ -69,23 +77,26 @@ local function field(p, name, text, width)
   e.style.width = scaled(p, width or 110)
   return e
 end
+-- Long help notes are shown as a short brief with the full text in the tooltip.
+-- Maps the full-text locale key to its brief locale key.
 local help_text = {
-  ['Новые маршруты появляются после исследования планет. Отсчёт расстояния — от текущей посадки; 100 МДж на запуск и 1 кДж на километр.'] = 'Следуйте открытым мирам. Расход: 100 МДж + 1 кДж/км.',
-  ['Выберите предмет для точного фильтра по качеству. Щелчок: взять стак; Shift: взять всё доступное. Передача предметов доступна внутри Тардис.'] = 'Щелчок — стак. Shift — всё. Фильтр учитывает качество.',
-  ['Оборудование, качество, теги и порча сохраняются. Складские комнаты добавляют по 4096 ячеек — до 32 768. Ресурсы для строительства берутся отсюда.'] = 'Содержимое стека сохраняется. Складской модуль: +4096 ячеек.',
-  ['Общий резерв — 10 ГДж. Контур удержания открывает ремонт коллекторов: каждый даёт 20 МВт, преобразователь после обоих добавляет 10 МВт. Для полёта нужны все четыре исправные энергомашины.'] = 'Один резерв на весь корабль. Отдача Ока: 0 → 20 → 40 → 50 МВт.',
-  ['Подключите фабрику к энергетическому разъёму рядом с будкой. Выдача учитывает реальное потребление: подключение пустой сети не разряжает резерв. Разъём путешествует вместе с Тардис.'] = 'Разъёмы передают энергию по фактической нагрузке.',
-  ['При нагрузке выше выработки запас уменьшается. Если энергии не хватает на выбранный маршрут, ТАРДИС не взлетит. Отключите выдачу в сети или снизьте нагрузку завода и дождитесь заряда.'] = 'Перерасход истощает резерв. Для полёта нужен заряд на весь маршрут.',
-  ['Снаружи поставьте входной/выходной порт не дальше 8 клеток от будки; эти порты остаются на планете. Внутри порты работают во всех комнатах и во время полёта, снабжая мобильный завод из общего склада.'] = 'Внешние шлюзы: до 8 клеток от будки. Внутренние: на обеих палубах.',
-  ['Вход без фильтра принимает любые предметы. Выход без фильтра ничего не выдаёт. «Оставить» — неснижаемый запас выбранного предмета на складе. До 500 предметов за цикл, два цикла в секунду.'] = 'Вход принимает всё. Выходу нужен фильтр. Остаток защищает запас.',
-  ['Вход — логистический сундук запроса, выход — пассивное снабжение. Запросы роботов настраиваются в обычном окне сундука; манипуляторы работают как обычно.'] = 'Роботы и манипуляторы обслуживают шлюзы как обычные сундуки.',
-  ['Отдельные вход и выход находятся по бокам будки и в грузовом отсеке. Подайте команды на вход, читайте состояние со выхода; не объединяйте их одним проводом. Грузовые порты подключают предметы к общей фабрике, сигнальные терминалы управляют кораблём.'] = 'Янтарный терминал принимает команды. Голубой передаёт состояние.',
-  ['При крушении корабль инженера врезался в ТАРДИС. Ремонтируйте узлы по порядку, снабжая общий склад через грузовые порты или вручную. Используются материалы обычного качества.'] = 'След аварии сохранился в памяти корабля. Восстановите повреждённые системы.',
-  ['Сначала контур удержания, затем два коллектора в любом порядке, последним — преобразователь. Нужны исправная матрица и химическая наука. Частичная отдача заряжает резерв, но для полёта исправными должны быть все четыре машины.'] = 'Удержание → два коллектора → преобразователь. Ремонт — возле машины.',
-  ['Входные грузовые порты также снабжают строительство. Отменить можно формирование комнаты; готовые комнаты остаются частью корабля.'] = 'Материалы поступают из общего склада. Готовые комнаты остаются с кораблём.',
+  ['tardis-ui.help-routes'] = 'tardis-ui.help-routes-brief',
+  ['tardis-ui.help-cargo-filter'] = 'tardis-ui.help-cargo-filter-brief',
+  ['tardis-ui.help-cargo-contents'] = 'tardis-ui.help-cargo-contents-brief',
+  ['tardis-ui.help-reserve'] = 'tardis-ui.help-reserve-brief',
+  ['tardis-ui.help-power-socket'] = 'tardis-ui.help-power-socket-brief',
+  ['tardis-ui.help-overload'] = 'tardis-ui.help-overload-brief',
+  ['tardis-ui.help-port-placement'] = 'tardis-ui.help-port-placement-brief',
+  ['tardis-ui.help-port-filters'] = 'tardis-ui.help-port-filters-brief',
+  ['tardis-ui.help-port-logistics'] = 'tardis-ui.help-port-logistics-brief',
+  ['tardis-ui.help-circuit'] = 'tardis-ui.help-circuit-brief',
+  ['tardis-ui.help-restoration'] = 'tardis-ui.help-restoration-brief',
+  ['tardis-ui.help-eye-order'] = 'tardis-ui.help-eye-order-brief',
+  ['tardis-ui.help-room-supply'] = 'tardis-ui.help-room-supply-brief',
 }
 local function note(parent, text)
-  local brief = type(text) == 'string' and help_text[text]
+  local brief = type(text) == 'table' and help_text[text[1]]
+  brief = brief and { brief }
   local e = label(parent, brief or text)
   e.style = 't12_muted'
   e.style.single_line = false
@@ -151,7 +162,7 @@ local function close(p)
     f.destroy()
   end
 end
-local function panel(f, n, title, p)
+local function panel(f, n, p)
   local d = dimensions(p)
   local tab = f.add({ type = 'tab', caption = '', style = 't12_tab_hidden' })
   local content = f.add({
@@ -178,7 +189,7 @@ local function heading(parent, code, title)
     sprite(row, 't12-gallifreyan-seal', 36, 'system-glyph')
     local brand = add(row, 'flow', 'system-brand', nil, { direction = 'vertical' })
     local system = systems[tonumber(code)]
-    label(brand, 'TYPE 40  /  ' .. code .. '  /  ТАРДИС XII').style = 't12_muted'
+    label(brand, { 'tardis-ui.header-brand', code }).style = 't12_muted'
     local name = wrapped(brand, 'system-title', system and (system.heading or system.title) or title, 660, 't12_title')
     local drag = add(row, 'empty-widget', 'drag')
     drag.style.horizontally_stretchable = true
@@ -187,7 +198,7 @@ local function heading(parent, code, title)
     local x = button(row, 't12-close', '×')
     x.style.width = 32
     x.style.minimal_width = 32
-    x.tooltip = 'Закрыть пульт'
+    x.tooltip = { 'tardis-ui.close-console' }
     wrapped(parent, 'status', '', 810, 't12_subtitle')
     local bar = add(parent, 'progressbar', 'energy', nil, { style = 't12_progress', value = 0 })
     bar.style.width = canvas(parent)
@@ -195,7 +206,7 @@ local function heading(parent, code, title)
   end
   local row = flow(parent, nil)
   label(row, code).style = 't12_subtitle'
-  wrapped(row, nil, '  /  ' .. title, 750, 't12_subtitle')
+  wrapped(row, nil, { '', '  /  ', title }, 750, 't12_subtitle')
 end
 local function metric(parent, name, title, value)
   local card = add(parent, 'frame', name, nil, { direction = 'vertical', style = 't12_card' })
@@ -296,7 +307,7 @@ local function update_preview(p, parent)
   end
   holder.tags = { preview_key = key }
   holder.clear()
-  label(holder, 'РАЙОН ПОСАДКИ').style = 't12_muted'
+  label(holder, { 'tardis-ui.landing-area' }).style = 't12_muted'
   if charted then
     local cam =
       add(holder, 'camera', 'landing-camera', nil, { position = { x, y }, surface_index = surface.index, zoom = 0.4 })
@@ -304,7 +315,7 @@ local function update_preview(p, parent)
     cam.style.height = 170
   else
     sprite(holder, planet and 'space-location/' .. st.planet or 'item/tardis', 96)
-    wrapped(holder, nil, 'Область ещё не разведана.', 350, 't12_muted')
+    wrapped(holder, nil, { 'tardis-ui.landing-uncharted' }, 350, 't12_muted')
   end
 end
 local function update_navigation(p, f, parent)
@@ -312,10 +323,10 @@ local function update_navigation(p, f, parent)
   update_planets(p, f, parent)
   local q = V.quote(f, st.planet)
   local left = parent['flight-view']['route-card']
-  left['route-origin'].caption = { '', 'ОТКУДА  ', planet_name(q.origin) }
-  left['route-target'].caption = { '', 'КУДА  ', planet_name(st.planet) }
-  left['route-distance'].caption = string.format('ДИСТАНЦИЯ   %s км', q.distance or 0)
-  left['route-cost'].caption = string.format('СТОИМОСТЬ   %.1f МДж', q.cost / 1e6)
+  left['route-origin'].caption = { 'tardis-ui.route-origin', planet_name(q.origin) }
+  left['route-target'].caption = { 'tardis-ui.route-target', planet_name(st.planet) }
+  left['route-distance'].caption = { 'tardis-ui.route-distance', string.format('%s', q.distance or 0) }
+  left['route-cost'].caption = { 'tardis-ui.route-cost', string.format('%.1f', q.cost / 1e6) }
   local route = { '' }
   for i, name in ipairs(q.path or {}) do
     if i > 1 then
@@ -325,13 +336,11 @@ local function update_navigation(p, f, parent)
   end
   left['route-path'].caption = route
   local blocked = f.circuit and f.circuit.inhibit
-  parent['flight-reason'].caption = blocked
-      and 'Логическая сеть блокирует прыжки: сигнал запрета активен.'
+  parent['flight-reason'].caption = blocked and { 'tardis-ui.flight-inhibited' }
     or q.error
-    or 'Маршрут согласован. Координаты готовы к материализации.'
+    or { 'tardis-ui.flight-ready' }
   parent.destination['t12-jump'].enabled = q.ok and not blocked and valid(f.box)
-  parent.destination['t12-jump'].tooltip = q.error
-    or string.format('Расход %.1f МДж. Время в вихре — 3 секунды.', q.cost / 1e6)
+  parent.destination['t12-jump'].tooltip = q.error or { 'tardis-ui.jump-tooltip', string.format('%.1f', q.cost / 1e6) }
   if parent['t12-return'] then
     local prev = f.previous and game.get_surface(f.previous.surface)
     parent['t12-return'].enabled = prev ~= nil and V.quote(f, prev).ok and not blocked
@@ -339,12 +348,10 @@ local function update_navigation(p, f, parent)
   parent.actions['t12-enter'].enabled = not access(p, f) and near_entry(p, f) and not f.flight
   local below = p.physical_surface == f.eye_surface
   local leave = parent.actions['t12-leave']
-  leave.caption = below and 'Подняться к консоли' or 'Выйти'
+  leave.caption = below and { 'tardis-ui.climb-to-console' } or { 'tardis-ui.leave' }
   local nearby, why = near_hatch(p, f, true)
   leave.enabled = access(p, f) and not f.flight and (not below or nearby)
-  leave.tooltip = below
-      and (why or 'Подняться по лестнице у южного входа в зал Ока.')
-    or 'Выйти к месту посадки ТАРДИС.'
+  leave.tooltip = below and (why or { 'tardis-ui.leave-ladder-tooltip' }) or { 'tardis-ui.leave-tooltip' }
   parent.actions['t12-recall'].enabled = not access(p, f) and not f.voyage.returned and not f.flight
   for i, v in ipairs(f.bookmarks) do
     local row = parent.bookmarks['bm' .. i]
@@ -356,11 +363,8 @@ local function update_navigation(p, f, parent)
   update_preview(p, parent)
 end
 local function navigation(p, f, parent)
-  heading(parent, '01', 'НАВИГАЦИЯ / ИЗУЧЕННЫЕ МИРЫ')
-  note(
-    parent,
-    'Новые маршруты появляются после исследования планет. Отсчёт расстояния — от текущей посадки; 100 МДж на запуск и 1 кДж на километр.'
-  )
+  heading(parent, '01', { 'tardis-ui.heading-navigation' })
+  note(parent, { 'tardis-ui.help-routes' })
   local cards = add(parent, 'table', 'planet-cards', nil, { column_count = 6 })
   cards.style.horizontal_spacing = 6
   local view = flow(parent, 'flight-view')
@@ -376,7 +380,7 @@ local function navigation(p, f, parent)
   dial.style.width = scaled(parent, 240)
   dial.style.height = scaled(parent, 120)
   dial.style.stretch_image_to_widget_size = true
-  dial.tooltip = 'Временной контур маршрута'
+  dial.tooltip = { 'tardis-ui.route-dial' }
   local preview = add(view, 'frame', 'landing-preview', nil, { direction = 'vertical', style = 't12_card' })
   preview.style.width = scaled(parent, 390)
   preview.style.minimal_height = 220
@@ -387,48 +391,50 @@ local function navigation(p, f, parent)
   field(row, 't12-x', state(p).x or 0, 90)
   label(row, 'Y')
   field(row, 't12-y', state(p).y or 0, 90)
-  local jump = button(row, 't12-jump', 'ПРЫЖОК')
+  local jump = button(row, 't12-jump', { 'tardis-ui.jump' })
   jump.style = 't12_primary'
   jump.style.width = scaled(parent, 225)
   wrapped(parent, 'flight-reason', '', 810, 't12_muted')
   if f.previous then
-    button(parent, 't12-return', '← Предыдущее место посадки')
+    button(parent, 't12-return', { 'tardis-ui.return-previous' })
   end
   local b = flow(parent, 'bookmark')
-  field(b, 't12-bookmark-name', state(p).bookmark_name or 'Моя база', 260)
-  button(b, 't12-save-bookmark', 'Запомнить текущую посадку')
+  -- Textfield text must be a plain string; an empty name is saved as the localised default.
+  field(b, 't12-bookmark-name', state(p).bookmark_name or '', 260)
+  button(b, 't12-save-bookmark', { 'tardis-ui.save-bookmark' })
   local scroll = add(parent, 'scroll-pane', 'bookmarks')
   scroll.style.maximal_height = 165
   for i, v in ipairs(f.bookmarks) do
     local r = flow(scroll, 'bm' .. i)
     local s = game.get_surface(v.surface)
-    local l = label(
-      r,
-      { '', v.name, ' — ', s and M.surface_name(s) or 'удалена', ' (', math.floor(v.x), ', ', math.floor(v.y), ')' }
-    )
+    local l = label(r, {
+      '',
+      v.name,
+      ' — ',
+      s and M.surface_name(s) or { 'tardis-ui.bookmark-surface-deleted' },
+      ' (',
+      math.floor(v.x),
+      ', ',
+      math.floor(v.y),
+      ')',
+    })
     l.style.width = scaled(parent, 530)
-    button(r, 't12-bookmark-go-' .. i, 'Полететь', { bookmark = i })
+    button(r, 't12-bookmark-go-' .. i, { 'tardis-ui.bookmark-go' }, { bookmark = i })
     button(r, 't12-bookmark-delete-' .. i, '×', { bookmark = i })
   end
   local r = flow(parent, 'actions')
-  button(r, 't12-enter', 'Войти').enabled = not access(p, f) and near_entry(p, f)
-  button(r, 't12-leave', 'Выйти').enabled = access(p, f)
-  button(r, 't12-recall', 'Призвать к себе').enabled = not access(p, f)
-  note(
-    parent,
-    f.room_layout_version == 1
-        and 'На юге круглого зала — большая синяя дверь выхода. Сохранено прежнее восточное крыло: комнаты за грузовым отсеком. Люк возле консоли ведёт вниз, в зал звезды Ока Гармонии.'
-      or 'На юге круглого зала — большая синяя дверь выхода. Северный проход ведёт к ветвям комнат; восточный — к грузовому отсеку. Люк возле консоли ведёт на нижний уровень Ока Гармонии.'
-  )
+  button(r, 't12-enter', { 'tardis-ui.enter' }).enabled = not access(p, f) and near_entry(p, f)
+  button(r, 't12-leave', { 'tardis-ui.leave' }).enabled = access(p, f)
+  button(r, 't12-recall', { 'tardis-ui.recall' }).enabled = not access(p, f)
+  note(parent, f.room_layout_version == 1 and { 'tardis-ui.layout-guide-legacy' } or { 'tardis-ui.layout-guide' })
   update_navigation(p, f, parent)
 end
 local function warehouse(p, f, parent)
-  heading(parent, '02', 'ПРОСТРАНСТВЕННЫЙ БУФЕР')
+  heading(parent, '02', { 'tardis-ui.heading-warehouse' })
   local st = state(p)
   st.page = st.page or 1
   local r = flow(parent, 'cargo-tools')
-  field(r, 't12-search', st.search or '', 220).tooltip =
-    'Поиск по русскому названию или внутреннему имени. Enter — найти.'
+  field(r, 't12-search', st.search or '', 220).tooltip = { 'tardis-ui.search-tooltip' }
   add(
     r,
     'choose-elem-button',
@@ -436,13 +442,10 @@ local function warehouse(p, f, parent)
     nil,
     { elem_type = 'item-with-quality', ['item-with-quality'] = st.filter }
   )
-  button(r, 't12-refresh', 'Обновить')
-  button(r, 't12-deposit', 'Положить всё').enabled = access(p, f)
-  button(r, 't12-upgrade', 'Расширить склад').enabled = #f.cargo < C.max_slots
-  note(
-    parent,
-    'Выберите предмет для точного фильтра по качеству. Щелчок: взять стак; Shift: взять всё доступное. Передача предметов доступна внутри Тардис.'
-  )
+  button(r, 't12-refresh', { 'tardis-ui.refresh' })
+  button(r, 't12-deposit', { 'tardis-ui.deposit-all' }).enabled = access(p, f)
+  button(r, 't12-upgrade', { 'tardis-ui.expand-warehouse' }).enabled = #f.cargo < C.max_slots
+  note(parent, { 'tardis-ui.help-cargo-filter' })
   local counts = f.cargo.get_contents()
   local list = {}
   st.translations = st.translations or {}
@@ -475,27 +478,20 @@ local function warehouse(p, f, parent)
   for i = (st.page - 1) * 24 + 1, math.min(st.page * 24, #list) do
     local v = list[i]
     local cell = flow(grid, 'item-' .. i)
-    local icon = add(
-      cell,
-      'sprite-button',
-      't12-item-' .. i,
-      nil,
-      {
-        sprite = 'item/' .. v.name,
-        number = v.count,
-        tags = { item = v.name, quality = v.quality },
-        tooltip = {
-          '',
-          prototypes.item[v.name].localised_name,
-          ' / ',
-          prototypes.quality[v.quality].localised_name,
-          '\n',
-          v.count,
-          ' шт.\nЛКМ: стак, Shift: всё',
-        },
-        style = 't12_slot',
-      }
-    )
+    local icon = add(cell, 'sprite-button', 't12-item-' .. i, nil, {
+      sprite = 'item/' .. v.name,
+      number = v.count,
+      tags = { item = v.name, quality = v.quality },
+      tooltip = {
+        '',
+        prototypes.item[v.name].localised_name,
+        ' / ',
+        prototypes.quality[v.quality].localised_name,
+        '\n',
+        { 'tardis-ui.item-count-hint', v.count },
+      },
+      style = 't12_slot',
+    })
     icon.enabled = access(p, f)
     local l =
       label(cell, { '', prototypes.item[v.name].localised_name, '\n', prototypes.quality[v.quality].localised_name })
@@ -506,55 +502,28 @@ local function warehouse(p, f, parent)
   button(paging, 't12-prev', '←').enabled = st.page > 1
   label(paging, st.page .. ' / ' .. pages)
   button(paging, 't12-next', '→').enabled = st.page < pages
-  label(paging, '  Занято ' .. (#f.cargo - f.cargo.count_empty_stacks()) .. ' / ' .. #f.cargo .. ' ячеек')
-  note(
-    parent,
-    'Оборудование, качество, теги и порча сохраняются. Складские комнаты добавляют по 4096 ячеек — до 32 768. Ресурсы для строительства берутся отсюда.'
-  )
+  label(paging, { '', '  ', { 'tardis-ui.cargo-used', #f.cargo - f.cargo.count_empty_stacks(), #f.cargo } })
+  note(parent, { 'tardis-ui.help-cargo-contents' })
 end
 local function energy(p, f, parent)
-  heading(parent, '03', 'ОКО ГАРМОНИИ / ЭНЕРГЕТИЧЕСКИЕ КОНТУРЫ')
+  heading(parent, '03', { 'tardis-ui.heading-energy' })
   local gauges = flow(parent, 'reactor-gauges')
-  metric(gauges, 'source', 'ВЫРАБОТКА ОКА', '')
-  metric(gauges, 'export-limit', 'ВНЕШНИЙ ЭНЕРГОКОНТУР', '200 МВт')
-  metric(gauges, 'interior-limit', 'ИНТЕРЬЕР И ВСЕ КОМНАТЫ', '20 МВт')
+  metric(gauges, 'source', { 'tardis-ui.metric-eye-output' }, '')
+  metric(gauges, 'export-limit', { 'tardis-ui.metric-export' }, { 'tardis-ui.megawatts', '200' })
+  metric(gauges, 'interior-limit', { 'tardis-ui.metric-interior' }, { 'tardis-ui.megawatts', '20' })
   wrapped(parent, 'reactor-condition', '', 810, 't12_subtitle')
-  note(
-    parent,
-    'Общий резерв — 10 ГДж. Контур удержания открывает ремонт коллекторов: каждый даёт 20 МВт, преобразователь после обоих добавляет 10 МВт. Для полёта нужны все четыре исправные энергомашины.'
-  )
-  add(
-    parent,
-    'checkbox',
-    't12-export',
-    'Питать внешнюю сеть — до 200 МВт',
-    { state = f.export }
-  )
-  add(
-    parent,
-    'checkbox',
-    't12-inner-power',
-    'Питать интерьер и мобильный завод — до 20 МВт',
-    { state = f.interior_power }
-  )
-  note(
-    parent,
-    'Подключите фабрику к энергетическому разъёму рядом с будкой. Выдача учитывает реальное потребление: подключение пустой сети не разряжает резерв. Разъём путешествует вместе с Тардис.'
-  )
-  note(
-    parent,
-    'При нагрузке выше выработки запас уменьшается. Если энергии не хватает на выбранный маршрут, ТАРДИС не взлетит. Отключите выдачу в сети или снизьте нагрузку завода и дождитесь заряда.'
-  )
-  button(parent, 't12-charge', 'Сосредоточить энергию на заряде')
-  button(parent, 't12-go-eye', 'Открыть схему энергомашин')
+  note(parent, { 'tardis-ui.help-reserve' })
+  add(parent, 'checkbox', 't12-export', { 'tardis-ui.export-power' }, { state = f.export })
+  add(parent, 'checkbox', 't12-inner-power', { 'tardis-ui.interior-power' }, { state = f.interior_power })
+  note(parent, { 'tardis-ui.help-power-socket' })
+  note(parent, { 'tardis-ui.help-overload' })
+  button(parent, 't12-charge', { 'tardis-ui.focus-charge' })
+  button(parent, 't12-go-eye', { 'tardis-ui.open-eye-schematic' })
   wrapped(parent, 'reactor-charge-time', '', 810, 't12_muted')
 end
 local function ports(p, f, parent)
-  heading(parent, '04', 'МАТЕРИАЛЬНЫЕ ШЛЮЗЫ')
-  note(
-    parent,
-    'Снаружи поставьте входной/выходной порт не дальше 8 клеток от будки; эти порты остаются на планете. Внутри порты работают во всех комнатах и во время полёта, снабжая мобильный завод из общего склада.'
-  )
+  heading(parent, '04', { 'tardis-ui.heading-ports' })
+  note(parent, { 'tardis-ui.help-port-placement' })
   local scroll = add(parent, 'scroll-pane', 'port-scroll')
   scroll.style.maximal_height = 270
   local found = 0
@@ -563,7 +532,7 @@ local function ports(p, f, parent)
       found = found + 1
       local r = flow(scroll, 'port' .. id)
       local input = v.entity.name == 'tardis-input'
-      label(r, (input and 'ВХОД' or 'ВЫХОД') .. ' #' .. id).style.width = 125
+      label(r, { '', { input and 'tardis-ui.port-input' or 'tardis-ui.port-output' }, ' #', id }).style.width = 125
       add(
         r,
         'choose-elem-button',
@@ -571,33 +540,27 @@ local function ports(p, f, parent)
         nil,
         { elem_type = 'item-with-quality', ['item-with-quality'] = v.filter, tags = { port = id } }
       )
-      label(r, input and 'Принимать на склад' or 'Оставить на складе:')
+      label(r, input and { 'tardis-ui.port-accept' } or { 'tardis-ui.port-keep' })
       if not input then
         field(r, 't12-port-keep-' .. id, v.keep, 105).tags = { port = id }
       end
-      add(r, 'checkbox', 't12-port-enabled-' .. id, 'Включён', { state = v.enabled, tags = { port = id } })
+      add(
+        r,
+        'checkbox',
+        't12-port-enabled-' .. id,
+        { 'tardis-ui.port-enabled' },
+        { state = v.enabled, tags = { port = id } }
+      )
     end
   end
   if found == 0 then
-    note(
-      parent,
-      'Подключённых портов нет. Постройте их у будки или внутри завода. При перелёте отключаются только внешние порты.'
-    )
+    note(parent, { 'tardis-ui.no-ports' })
   end
-  note(
-    parent,
-    'Вход без фильтра принимает любые предметы. Выход без фильтра ничего не выдаёт. «Оставить» — неснижаемый запас выбранного предмета на складе. До 500 предметов за цикл, два цикла в секунду.'
-  )
-  button(parent, 't12-refresh-ports', 'Обновить порты')
-  note(
-    parent,
-    'Вход — логистический сундук запроса, выход — пассивное снабжение. Запросы роботов настраиваются в обычном окне сундука; манипуляторы работают как обычно.'
-  )
-  heading(parent, 'I/O', 'ЛОГИЧЕСКАЯ СЕТЬ / КРАСНЫЙ И ЗЕЛЁНЫЙ ПРОВОД')
-  note(
-    parent,
-    'Отдельные вход и выход находятся по бокам будки и в грузовом отсеке. Подайте команды на вход, читайте состояние со выхода; не объединяйте их одним проводом. Грузовые порты подключают предметы к общей фабрике, сигнальные терминалы управляют кораблём.'
-  )
+  note(parent, { 'tardis-ui.help-port-filters' })
+  button(parent, 't12-refresh-ports', { 'tardis-ui.refresh-ports' })
+  note(parent, { 'tardis-ui.help-port-logistics' })
+  heading(parent, 'I/O', { 'tardis-ui.heading-circuit' })
+  note(parent, { 'tardis-ui.help-circuit' })
   wrapped(parent, 'circuit-condition', '', 810, 't12_subtitle')
   local protocol = add(parent, 'table', 'circuit-protocol', nil, { column_count = 2 })
   protocol.style.horizontal_spacing = 20
@@ -606,43 +569,29 @@ local function ports(p, f, parent)
   incoming.style.width = math.floor((canvas(parent) - 20) / 2)
   local outgoing = add(protocol, 'frame', 'wire-output-help', nil, { direction = 'vertical', style = 't12_card' })
   outgoing.style.width = math.floor((canvas(parent) - 20) / 2)
-  label(incoming, 'ВХОД / КОМАНДЫ').style = 't12_subtitle'
-  label(outgoing, 'ВЫХОД / ТЕЛЕМЕТРИЯ').style = 't12_subtitle'
+  label(incoming, { 'tardis-ui.circuit-input-title' }).style = 't12_subtitle'
+  label(outgoing, { 'tardis-ui.circuit-output-title' }).style = 't12_subtitle'
   local function signal(parent, key, text)
     local row = flow(parent, nil)
     sprite(row, 'virtual-signal/tardis-signal-' .. key, 24)
     wrapped(row, nil, text, 338)
   end
-  signal(incoming, 'destination', 'Код планеты назначения')
-  signal(incoming, 'x', 'X точки посадки')
-  signal(incoming, 'y', 'Y точки посадки')
-  signal(incoming, 'jump', 'Прыжок: импульс 0 → положительное значение')
-  signal(incoming, 'inhibit', 'Запрет прыжков: значение > 0')
-  signal(
-    incoming,
-    'export',
-    'Внешнее питание: > 0 вкл., < 0 выкл., 0 — управление с консоли'
-  )
-  signal(outgoing, 'energy', 'Запас энергии, МДж')
-  signal(outgoing, 'charge', 'Заряд резерва, %')
-  signal(outgoing, 'busy', 'В полёте: 1')
-  signal(
-    outgoing,
-    'ready',
-    'Готова к запуску: 1 (цена цели проверяется при команде)'
-  )
-  signal(outgoing, 'origin', 'Код текущей планеты')
-  signal(outgoing, 'items', 'Количество предметов на складе')
-  signal(outgoing, 'free-slots', 'Свободные ячейки')
-  signal(outgoing, 'result', 'Результат: 1 успешно, отрицательное — отказ')
-  note(
-    parent,
-    'Коды: 1 Наувис · 2 Вулкан · 3 Фульгора · 4 Глеба · 5 Аквило · 6 Разрушенная планета. Координаты — в клетках. Доступность исследований, ремонт, заряд и безопасная посадка проверяются при каждом прыжке.'
-  )
-  note(
-    parent,
-    'Выход также передаёт все предметы склада с их количеством и качеством. Постоянный высокий сигнал прыжка не вызывает повторных полётов; для новой команды опустите его до нуля. Внутренний вход имеет приоритет при одновременных командах.'
-  )
+  signal(incoming, 'destination', { 'tardis-ui.signal-destination' })
+  signal(incoming, 'x', { 'tardis-ui.signal-x' })
+  signal(incoming, 'y', { 'tardis-ui.signal-y' })
+  signal(incoming, 'jump', { 'tardis-ui.signal-jump' })
+  signal(incoming, 'inhibit', { 'tardis-ui.signal-inhibit' })
+  signal(incoming, 'export', { 'tardis-ui.signal-export' })
+  signal(outgoing, 'energy', { 'tardis-ui.signal-energy' })
+  signal(outgoing, 'charge', { 'tardis-ui.signal-charge' })
+  signal(outgoing, 'busy', { 'tardis-ui.signal-busy' })
+  signal(outgoing, 'ready', { 'tardis-ui.signal-ready' })
+  signal(outgoing, 'origin', { 'tardis-ui.signal-origin' })
+  signal(outgoing, 'items', { 'tardis-ui.signal-items' })
+  signal(outgoing, 'free-slots', { 'tardis-ui.signal-free-slots' })
+  signal(outgoing, 'result', { 'tardis-ui.signal-result' })
+  note(parent, { 'tardis-ui.circuit-codes' })
+  note(parent, { 'tardis-ui.circuit-notes' })
 end
 local function rooms(p, f, parent)
   local R = M.Rooms
@@ -650,20 +599,11 @@ local function rooms(p, f, parent)
   local st = state(p)
   st.room_slot = st.room_slot or 1
   local legacy = f.room_layout_version == 1
-  heading(parent, '05', 'АРХИТЕКТУРНАЯ СИСТЕМА')
-  note(
-    parent,
-    legacy
-        and 'Сохранено прежнее восточное крыло: перенос комнат не выполнен, чтобы сохранить существующие постройки. Вход через грузовой отсек. Материалы обычного качества берутся из общего склада; формирование — 10 секунд.'
-      or 'Комнаты растут к северу от круглого консольного зала. Сначала постройте отсек первого уровня, затем его ответвления. Материалы обычного качества берутся из общего склада; формирование — 10 секунд.'
-  )
+  heading(parent, '05', { 'tardis-ui.heading-rooms' })
+  note(parent, legacy and { 'tardis-ui.rooms-intro-legacy' } or { 'tardis-ui.rooms-intro' })
   local layout = add(parent, 'frame', 'layout', nil, { direction = 'vertical', style = 't12_card' })
   layout.style.width = canvas(parent)
-  label(
-    layout,
-    legacy and 'ВОСТОЧНОЕ КРЫЛО / СОХРАНЁННАЯ ПЛАНИРОВКА'
-      or '↑ СЕВЕР / ВТОРОЙ УРОВЕНЬ'
-  ).style =
+  label(layout, legacy and { 'tardis-ui.rooms-layout-legacy' } or { 'tardis-ui.rooms-layout-north' }).style =
     't12_muted'
   local function parent_slot(slot)
     if legacy then
@@ -673,21 +613,31 @@ local function rooms(p, f, parent)
   end
   local function room_button(holder, slot, width)
     local room = f.rooms[slot]
-    local text = room and R.plans[room.kind].title or 'Свободный отсек'
+    local text = room and R.plans[room.kind].title or { 'tardis-ui.room-free' }
     local parent_id = parent_slot(slot)
     local ready = not parent_id or (f.rooms[parent_id] and f.rooms[parent_id].state == 'ready')
     local detail = room
-        and (room.state == 'ready' and 'ГОТОВ' or room.state == 'refund' and 'ВОЗВРАТ РЕСУРСОВ' or 'ФОРМИРУЕТСЯ')
-      or ready and 'Выбрать проект'
-      or string.format('Сначала отсек %02d', parent_id)
+        and (room.state == 'ready' and { 'tardis-ui.room-state-ready' } or room.state == 'refund' and {
+          'tardis-ui.room-state-refund',
+        } or { 'tardis-ui.room-state-building' })
+      or ready and { 'tardis-ui.room-choose-project' }
+      or { 'tardis-ui.room-needs-parent', string.format('%02d', parent_id) }
     local b = button(
       holder,
       't12-room-slot-' .. slot,
-      string.format('%02d  %s', slot, room and R.plans[room.kind].title or 'Пустой отсек'),
+      { '', string.format('%02d  ', slot), room and R.plans[room.kind].title or { 'tardis-ui.room-empty' } },
       { slot = slot }
     )
     local xy = R.position(slot, f)
-    b.tooltip = string.format('%02d / %s\n%s\nКоординаты: %d, %d', slot, text, detail, xy.x, xy.y)
+    b.tooltip = {
+      '',
+      string.format('%02d / ', slot),
+      text,
+      '\n',
+      detail,
+      '\n',
+      { 'tardis-ui.room-coordinates', string.format('%d', xy.x), string.format('%d', xy.y) },
+    }
     if slot == st.room_slot then
       b.style = 't12_primary'
     end
@@ -729,20 +679,14 @@ local function rooms(p, f, parent)
     room_button(branches, 2, 390)
     local branch_names = flow(layout, 'tree-branch-names')
     branch_names.style.horizontal_spacing = 6
-    wrapped(branch_names, nil, 'Отсек 01 → ответвления 03 и 04', 390, 't12_muted').style.width =
+    wrapped(branch_names, nil, { 'tardis-ui.room-branches', '01', '03', '04' }, 390, 't12_muted').style.width =
       scaled(parent, 390)
-    wrapped(branch_names, nil, 'Отсек 02 → ответвления 05 и 06', 390, 't12_muted').style.width =
+    wrapped(branch_names, nil, { 'tardis-ui.room-branches', '02', '05', '06' }, 390, 't12_muted').style.width =
       scaled(parent, 390)
     local trunk = add(layout, 'frame', 'tree-console-hall', nil, { direction = 'vertical', style = 't12_amber_card' })
     trunk.style.width = scaled(parent, 786)
-    label(trunk, 'КРУГЛЫЙ КОНСОЛЬНЫЙ ЗАЛ / СЕВЕРНЫЙ ПРОХОД').style = 't12_subtitle'
-    wrapped(
-      trunk,
-      nil,
-      'Люк у консоли: вниз к Оку     ·     Восток: грузовой отсек     ·     Юг: дверь наружу',
-      760,
-      't12_muted'
-    )
+    label(trunk, { 'tardis-ui.rooms-console-hall' }).style = 't12_subtitle'
+    wrapped(trunk, nil, { 'tardis-ui.rooms-console-hall-exits' }, 760, 't12_muted')
   end
   local room = f.rooms[st.room_slot]
   if room then
@@ -752,9 +696,7 @@ local function rooms(p, f, parent)
         parent,
         'label',
         'room-countdown',
-        'Перестройка внутреннего пространства: '
-          .. math.max(0, math.ceil((room.finish - game.tick) / 60))
-          .. ' сек.',
+        { 'tardis-ui.room-countdown', math.max(0, math.ceil((room.finish - game.tick) / 60)) },
         { style = 't12_subtitle' }
       )
       add(
@@ -765,47 +707,22 @@ local function rooms(p, f, parent)
         { style = 't12_progress', value = math.min(1, (game.tick - room.started) / R.build_ticks) }
       ).style.width =
         canvas(parent)
-      button(
-        parent,
-        't12-cancel-room',
-        'Отменить и вернуть материалы',
-        { slot = st.room_slot }
-      ).enabled =
-        access(p, f)
+      button(parent, 't12-cancel-room', { 'tardis-ui.room-cancel' }, { slot = st.room_slot }).enabled = access(p, f)
     elseif room.state == 'refund' then
-      note(
-        parent,
-        'Освободите место в общем складе. Материалы сохранены и автоматически вернутся; отсек снова станет свободным.'
-      )
+      note(parent, { 'tardis-ui.room-refund' })
     else
       local xy = R.position(st.room_slot, f)
       note(parent, R.plans[room.kind].description)
       local parent_id = parent_slot(st.room_slot)
+      local x, y = tostring(xy.x), tostring(xy.y)
       note(
         parent,
-        (
-          legacy
-            and ('Через восточный грузовой отсек пройдите по коридору ' .. (xy.y < 0 and 'на север' or 'на юг'))
-          or (
-            'Из круглого зала пройдите на север, затем '
-            .. (
-              parent_id
-                and ('через отсек ' .. string.format('%02d', parent_id) .. ' к его ответвлению')
-              or (xy.x < 0 and 'по левой ветви' or 'по правой ветви')
-            )
-          )
-        )
-          .. '. Координаты комнаты: '
-          .. xy.x
-          .. ', '
-          .. xy.y
-          .. '.'
+        legacy and { xy.y < 0 and 'tardis-ui.room-route-legacy-north' or 'tardis-ui.room-route-legacy-south', x, y }
+          or parent_id and { 'tardis-ui.room-route-branch', string.format('%02d', parent_id), x, y }
+          or { xy.x < 0 and 'tardis-ui.room-route-left' or 'tardis-ui.room-route-right', x, y }
       )
       if room.added_slots then
-        note(
-          parent,
-          'Этот модуль добавил ' .. room.added_slots .. ' ячеек в общий склад.'
-        )
+        note(parent, { 'tardis-ui.room-added-slots', room.added_slots })
       end
     end
   else
@@ -833,56 +750,45 @@ local function rooms(p, f, parent)
       for _, v in ipairs(plan.cost) do
         local have = f.cargo.get_item_count({ name = v.name, quality = 'normal' })
         local color = have >= v.count and '139,211,208' or '241,171,97'
-        local l = add(
-          card,
-          'label',
-          'cost-' .. v.name,
-          {
-            '',
-            '[item=',
-            v.name,
-            ']  [color=',
-            color,
-            ']',
-            math.min(have, v.count),
-            ' / ',
-            v.count,
-            '[/color]  ',
-            prototypes.item[v.name].localised_name,
-          },
-          { style = 't12_text' }
-        )
+        local l = add(card, 'label', 'cost-' .. v.name, {
+          '',
+          '[item=',
+          v.name,
+          ']  [color=',
+          color,
+          ']',
+          math.min(have, v.count),
+          ' / ',
+          v.count,
+          '[/color]  ',
+          prototypes.item[v.name].localised_name,
+        }, { style = 't12_text' })
         l.style.maximal_width = scaled(parent, 235)
         l.style.single_line = false
       end
-      local b =
-        button(card, 't12-build-room-' .. kind, 'СФОРМИРОВАТЬ', { slot = st.room_slot, kind = kind })
+      local b = button(
+        card,
+        't12-build-room-' .. kind,
+        { 'tardis-ui.room-build' },
+        { slot = st.room_slot, kind = kind }
+      )
       b.style = 't12_primary'
       b.style.width = scaled(parent, 235)
       b.enabled = access(p, f)
         and available
         and #R.missing(f, kind) == 0
         and not (plan.slots and #f.cargo >= C.max_slots)
-      b.tooltip = reason
-        or 'Ресурсы спишутся из общего склада. Готовая комната останется с Тардис при перелётах и упаковке.'
+      b.tooltip = reason or { 'tardis-ui.room-build-tooltip' }
     end
   end
   local row = flow(parent, 'room-actions')
-  button(row, 't12-deposit-for-rooms', 'Внести материалы').enabled = access(p, f)
-  button(row, 't12-refresh-rooms', 'Проверить ресурсы')
+  button(row, 't12-deposit-for-rooms', { 'tardis-ui.deposit-materials' }).enabled = access(p, f)
+  button(row, 't12-refresh-rooms', { 'tardis-ui.check-resources' })
   if legacy then
-    note(
-      parent,
-      f.room_layout_error
-        or 'Освободите северные площадки и проверьте стыки труб и конвейеров старых комнат.'
-    )
-    button(parent, 't12-migrate-rooms', 'Повторить перенос на север').enabled = access(p, f)
-      and not f.flight
+    note(parent, f.room_layout_error or { 'tardis-ui.room-migrate-hint' })
+    button(parent, 't12-migrate-rooms', { 'tardis-ui.room-migrate' }).enabled = access(p, f) and not f.flight
   end
-  note(
-    parent,
-    'Входные грузовые порты также снабжают строительство. Отменить можно формирование комнаты; готовые комнаты остаются частью корабля.'
-  )
+  note(parent, { 'tardis-ui.help-room-supply' })
 end
 local function update_restoration(p, f, parent)
   local story = V.info(f)
@@ -894,17 +800,14 @@ local function update_restoration(p, f, parent)
     local card = parent['repair-projects']['repair-' .. key]
     local repaired = f.voyage[key]
     local ready, reason = V.repair_ready(f, key)
-    card['repair-state'].caption = repaired and '[color=140,205,140]ВОССТАНОВЛЕНО[/color]'
-      or key == 'eye' and ('ЭНЕРГОМАШИНЫ ' .. Core.count(f) .. ' / 4')
-      or '[color=236,176,87]ТРЕБУЕТСЯ РЕМОНТ[/color]'
+    card['repair-state'].caption = repaired and { 'tardis-ui.repair-state-restored' }
+      or key == 'eye' and { 'tardis-ui.repair-state-machines', Core.count(f) }
+      or { 'tardis-ui.repair-state-damaged' }
     card['repair-condition'].caption = key == 'eye'
-        and string.format(
-          'Отдача %.0f МВт. Ремонт выполняется у каждой машины в нижнем зале.',
-          Core.recharge(f) / 1e6
-        )
-      or repaired and 'Узел исправен.'
+        and { 'tardis-ui.repair-eye-output', string.format('%.0f', Core.recharge(f) / 1e6) }
+      or repaired and { 'tardis-ui.repair-node-ok' }
       or reason
-      or 'Материалы готовы. Можно начать восстановление.'
+      or { 'tardis-ui.repair-materials-ready' }
     for _, item in ipairs(plan.cost) do
       local have = f.cargo.get_item_count({ name = item.name, quality = 'normal' })
       local needed = item.count
@@ -938,34 +841,28 @@ local function update_restoration(p, f, parent)
     local b = card['t12-repair-' .. key]
     if key == 'eye' then
       b.enabled = true
-      b.caption = 'СХЕМА ЭНЕРГОМАШИН'
-      b.tooltip =
-        'Посмотреть узлы Ока. Для ремонта спуститесь через люк и подойдите к нужной машине.'
+      b.caption = { 'tardis-ui.eye-schematic' }
+      b.tooltip = { 'tardis-ui.eye-schematic-tooltip' }
     else
       b.enabled = access(p, f) and ready
-      b.caption = repaired and 'ВОССТАНОВЛЕНО' or 'ВОССТАНОВИТЬ'
-      b.tooltip = reason
-        or 'Материалы обычного качества спишутся из общего склада.'
+      b.caption = repaired and { 'tardis-ui.restored' } or { 'tardis-ui.restore' }
+      b.tooltip = reason or { 'tardis-ui.repair-tooltip' }
     end
   end
   local holder = parent['return-protocol']
   local ready, reason = V.return_ready(f)
-  holder['return-condition'].caption = story.returned
-      and 'ТАРДИС у Доктора. Завод и склад доступны через пространственный якорь на Наувисе.'
+  holder['return-condition'].caption = story.returned and { 'tardis-ui.return-done' }
     or reason
-    or 'Корабль восстановлен и достиг Разрушенной планеты. След временной линии найден.'
+    or { 'tardis-ui.return-available' }
   holder['t12-return-doctor-review'].visible = not story.returned and not st.return_confirm
   holder['t12-return-doctor-review'].enabled = ready and access(p, f)
   holder['return-confirmation'].visible = not story.returned and st.return_confirm == true
   holder['return-confirmation']['return-confirm-actions']['t12-return-doctor-confirm'].enabled = ready and access(p, f)
 end
 local function restoration(p, f, parent)
-  heading(parent, '06', 'ВОССТАНОВЛЕНИЕ / ВОЗВРАЩЕНИЕ ДОКТОРУ')
+  heading(parent, '06', { 'tardis-ui.heading-restoration' })
   wrapped(parent, 'story-stage', '', 810, 't12_subtitle')
-  note(
-    parent,
-    'При крушении корабль инженера врезался в ТАРДИС. Ремонтируйте узлы по порядку, снабжая общий склад через грузовые порты или вручную. Используются материалы обычного качества.'
-  )
+  note(parent, { 'tardis-ui.help-restoration' })
   local projects = add(parent, 'table', 'repair-projects', nil, { column_count = 3 })
   projects.style.horizontal_spacing = 8
   for i, key in ipairs(V.order) do
@@ -974,7 +871,7 @@ local function restoration(p, f, parent)
     card.style.width = math.floor((canvas(parent) - 16) / 3)
     local top = flow(card, nil)
     sprite(top, 'item/' .. plan.icon, 32)
-    wrapped(top, nil, string.format('%02d / ', i) .. plan.title, 200, 't12_subtitle')
+    wrapped(top, nil, { '', string.format('%02d / ', i), plan.title }, 200, 't12_subtitle')
     wrapped(card, 'repair-state', '', 245, 't12_muted')
     wrapped(card, nil, plan.description, 245).style.minimal_height = 105
     for _, item in ipairs(plan.cost) do
@@ -984,60 +881,43 @@ local function restoration(p, f, parent)
       wrapped(
         card,
         nil,
-        { '', 'Исследование: ', prototypes.technology[plan.technology].localised_name },
+        { 'tardis-ui.research-required', prototypes.technology[plan.technology].localised_name },
         245,
         't12_muted'
       )
     else
-      wrapped(card, nil, 'Доступно с начала игры.', 245, 't12_muted')
+      wrapped(card, nil, { 'tardis-ui.available-from-start' }, 245, 't12_muted')
     end
     wrapped(card, 'repair-condition', '', 245, 't12_muted').style.minimal_height = 60
     local b = button(
       card,
       't12-repair-' .. key,
-      key == 'eye' and 'СХЕМА ЭНЕРГОМАШИН' or 'ВОССТАНОВИТЬ',
+      key == 'eye' and { 'tardis-ui.eye-schematic' } or { 'tardis-ui.restore' },
       key == 'eye' and { eye_overview = true } or { repair = key }
     )
     b.style = 't12_primary'
     b.style.width = scaled(parent, 235)
   end
   local actions = flow(parent, 'repair-actions')
-  button(actions, 't12-deposit-for-repairs', 'Внести материалы').enabled = access(p, f)
-  button(actions, 't12-refresh-repairs', 'Проверить материалы')
+  button(actions, 't12-deposit-for-repairs', { 'tardis-ui.deposit-materials' }).enabled = access(p, f)
+  button(actions, 't12-refresh-repairs', { 'tardis-ui.check-materials' })
   local record = add(parent, 'frame', 'doctor-record', nil, { direction = 'vertical', style = 't12_card' })
   record.style.width = canvas(parent)
-  label(record, 'АРХИВ / СООБЩЕНИЕ ДОКТОРА').style = 't12_subtitle'
+  label(record, { 'tardis-ui.doctor-archive' }).style = 't12_subtitle'
   wrapped(record, 'doctor-message', '', 790)
   local finale = add(parent, 'frame', 'return-protocol', nil, { direction = 'vertical', style = 't12_amber_card' })
   finale.style.width = canvas(parent)
-  label(finale, 'ПОСЛЕДНИЙ МАРШРУТ / РАЗРУШЕННАЯ ПЛАНЕТА').style = 't12_subtitle'
+  label(finale, { 'tardis-ui.final-route' }).style = 't12_subtitle'
   wrapped(finale, 'return-condition', '', 790)
-  wrapped(
-    finale,
-    nil,
-    'Это Разрушенная планета Space Age за границей солнечной системы. Её маршрут открывается исследованием прометиевой науки. После посадки полностью исправную ТАРДИС можно отправить по следу Доктора.',
-    790,
-    't12_muted'
-  )
-  button(finale, 't12-return-doctor-review', 'Подготовить возвращение Доктору')
+  wrapped(finale, nil, { 'tardis-ui.final-route-description' }, 790, 't12_muted')
+  button(finale, 't12-return-doctor-review', { 'tardis-ui.return-review' })
   local confirmation = add(finale, 'flow', 'return-confirmation', nil, { direction = 'vertical' })
-  wrapped(
-    confirmation,
-    nil,
-    'ТАРДИС и Око Гармонии отправятся Доктору. Будет потрачено 1 ГДж. Экипаж вернётся на Наувис; комнаты, все машины и груз останутся доступны через постоянный пространственный якорь рядом с местом старта. Завод станет стационарным, полёты и генерация Ока прекратятся. Для дальнейшей работы завода понадобится собственный источник энергии.',
-    790
-  )
-  wrapped(
-    confirmation,
-    nil,
-    'Это завершит историю этого корабля. Готовы отправить его?',
-    790,
-    't12_subtitle'
-  )
+  wrapped(confirmation, nil, { 'tardis-ui.return-warning' }, 790)
+  wrapped(confirmation, nil, { 'tardis-ui.return-question' }, 790, 't12_subtitle')
   local row = flow(confirmation, 'return-confirm-actions')
-  local b = button(row, 't12-return-doctor-confirm', 'ВЕРНУТЬ ДОКТОРУ')
+  local b = button(row, 't12-return-doctor-confirm', { 'tardis-ui.return-confirm' })
   b.style = 't12_primary'
-  button(row, 't12-return-doctor-cancel', 'Пока остаться')
+  button(row, 't12-return-doctor-cancel', { 'tardis-ui.return-cancel' })
   update_restoration(p, f, parent)
 end
 local function update_eye(p, f, parent)
@@ -1050,27 +930,33 @@ local function update_eye(p, f, parent)
   local plan = Core.plans[key]
   local watts = Core.recharge(f)
   local count = Core.count(f)
-  parent['eye-condition'].caption = f.voyage.returned
-      and 'Око отправлено Доктору. Энергомашины отключены.'
-    or string.format('ВОССТАНОВЛЕНО %d / 4     ·     ВЫРАБОТКА %.0f МВт', count, watts / 1e6)
+  parent['eye-condition'].caption = f.voyage.returned and { 'tardis-ui.eye-returned' }
+    or { 'tardis-ui.eye-condition', string.format('%d', count), string.format('%.0f', watts / 1e6) }
   local map = parent['eye-map']
   for _, id in ipairs(Core.order) do
     local b = map['t12-eye-select-' .. id]
     local repaired = state_core.modules[id]
-    local short = id == 'containment' and 'Удержание' or Core.plans[id].title
-    b.caption = short .. (repaired and '  [color=139,211,150]✓[/color]' or '  [color=241,171,97]×[/color]')
-    b.tooltip = Core.plans[id].bearing
-      .. ' / '
-      .. Core.plans[id].title
-      .. ': '
-      .. (repaired and 'исправен' or 'повреждён')
+    local short = id == 'containment' and { 'tardis-ui.eye-containment-short' } or Core.plans[id].title
+    b.caption = {
+      '',
+      short,
+      repaired and '  [color=139,211,150]✓[/color]' or '  [color=241,171,97]×[/color]',
+    }
+    b.tooltip = {
+      '',
+      Core.plans[id].bearing,
+      ' / ',
+      Core.plans[id].title,
+      ': ',
+      repaired and { 'tardis-ui.eye-node-ok' } or { 'tardis-ui.eye-node-damaged' },
+    }
     b.style = id == key and 't12_primary' or 't12_button'
     b.style.width = scaled(parent, 250)
     b.style.height = 54
   end
-  map['eye-star-card']['eye-star-output'].caption = string.format('ЗВЕЗДА / %.0f МВт', watts / 1e6)
+  map['eye-star-card']['eye-star-output'].caption = { 'tardis-ui.eye-star-output', string.format('%.0f', watts / 1e6) }
   local details = parent['eye-selected']
-  details['eye-module-title'].caption = plan.title .. ' / ' .. plan.bearing
+  details['eye-module-title'].caption = { '', plan.title, ' / ', plan.bearing }
   details['eye-module-description'].caption = plan.description
   for _, item in ipairs(plan.cost) do
     local have = f.cargo.get_item_count({ name = item.name, quality = 'normal' })
@@ -1090,29 +976,22 @@ local function update_eye(p, f, parent)
     }
   end
   local ready, reason = Core.repair_ready(f, key, p)
-  details['eye-repair-condition'].caption = state_core.modules[key]
-      and 'Эта энергомашина уже восстановлена.'
+  details['eye-repair-condition'].caption = state_core.modules[key] and { 'tardis-ui.eye-machine-restored' }
     or reason
-    or 'Вы рядом с машиной. Материалы готовы к ремонту.'
+    or { 'tardis-ui.eye-machine-ready' }
   local b = details['eye-repair-actions']['t12-eye-repair']
   b.enabled = ready
   b.tags = { eye_repair = key }
-  b.caption = state_core.modules[key] and 'ВОССТАНОВЛЕНО' or 'ВОССТАНОВИТЬ УЗЕЛ'
-  b.tooltip = reason
-    or 'Списать материалы обычного качества из общего склада и починить эту физическую машину.'
+  b.caption = state_core.modules[key] and { 'tardis-ui.restored' } or { 'tardis-ui.restore-node' }
+  b.tooltip = reason or { 'tardis-ui.eye-repair-tooltip' }
   local hatch = parent['eye-travel']
   hatch['t12-eye-descend'].enabled = near_hatch(p, f, false)
   hatch['t12-eye-ascend'].enabled = near_hatch(p, f, true)
   hatch['t12-eye-descend'].visible = p.physical_surface ~= f.eye_surface
   hatch['t12-eye-ascend'].visible = p.physical_surface == f.eye_surface
   local at = valid(f.eye_room and f.eye_room.hatch) and f.eye_room.hatch.position or { x = 6, y = 7 }
-  parent['eye-hatch-guide'].caption = p.physical_surface == f.eye_surface
-      and 'Назад в консольный зал — лестница у южного входа. Для ремонта подойдите к выбранной машине не дальше 6 клеток.'
-    or string.format(
-      'Люк в полу круглого консольного зала: X %.1f, Y %.1f. Подойдите к нему и щёлкните. Эта схема доступна удалённо; ремонт — только возле машин внизу.',
-      at.x,
-      at.y
-    )
+  parent['eye-hatch-guide'].caption = p.physical_surface == f.eye_surface and { 'tardis-ui.eye-guide-below' }
+    or { 'tardis-ui.eye-guide-above', string.format('%.1f', at.x), string.format('%.1f', at.y) }
 end
 local function eye(p, f, parent)
   local st = state(p)
@@ -1126,12 +1005,9 @@ local function eye(p, f, parent)
       end
     end
   end
-  heading(parent, '07', 'ОКО ГАРМОНИИ / НИЖНИЙ УРОВЕНЬ')
+  heading(parent, '07', { 'tardis-ui.heading-eye' })
   wrapped(parent, 'eye-condition', '', 810, 't12_subtitle')
-  note(
-    parent,
-    'Сначала контур удержания, затем два коллектора в любом порядке, последним — преобразователь. Нужны исправная матрица и химическая наука. Частичная отдача заряжает резерв, но для полёта исправными должны быть все четыре машины.'
-  )
+  note(parent, { 'tardis-ui.help-eye-order' })
   local map = add(parent, 'table', 'eye-map', nil, { column_count = 3 })
   map.style.horizontal_spacing = 16
   map.style.vertical_spacing = 6
@@ -1151,7 +1027,7 @@ local function eye(p, f, parent)
   node('collector_a')
   local star = add(map, 'frame', 'eye-star-card', nil, { direction = 'vertical', style = 't12_amber_card' })
   star.style.width = scaled(parent, 250)
-  label(star, 'ОКО ГАРМОНИИ').style = 't12_subtitle'
+  label(star, { 'tardis-ui.eye-star-title' }).style = 't12_subtitle'
   add(star, 'label', 'eye-star-output', '', { style = 't12_muted' })
   node('collector_b')
   blank()
@@ -1168,13 +1044,13 @@ local function eye(p, f, parent)
   end
   wrapped(details, 'eye-repair-condition', '', 788, 't12_muted')
   local row = flow(details, 'eye-repair-actions')
-  local b = button(row, 't12-eye-repair', 'ВОССТАНОВИТЬ УЗЕЛ')
+  local b = button(row, 't12-eye-repair', { 'tardis-ui.restore-node' })
   b.style = 't12_primary'
-  button(row, 't12-eye-deposit', 'Внести материалы').enabled = access(p, f)
+  button(row, 't12-eye-deposit', { 'tardis-ui.deposit-materials' }).enabled = access(p, f)
   wrapped(parent, 'eye-hatch-guide', '', 810, 't12_muted')
   local travel = flow(parent, 'eye-travel')
-  button(travel, 't12-eye-descend', 'Спуститься через люк')
-  button(travel, 't12-eye-ascend', 'Подняться к консоли')
+  button(travel, 't12-eye-descend', { 'tardis-ui.descend-hatch' })
+  button(travel, 't12-eye-ascend', { 'tardis-ui.climb-to-console' })
   update_eye(p, f, parent)
 end
 function UI.open(p, id, tab)
@@ -1205,18 +1081,19 @@ function UI.open(p, id, tab)
   local selector = add(rail, 'flow', 'systems', nil, { direction = 'vertical' })
   selector.style.vertical_spacing = 3
   for i, v in ipairs(systems) do
-    local b = button(selector, 't12-system-' .. i, v.code .. '  ' .. v.title, { system = i })
+    local b = button(selector, 't12-system-' .. i, { '', v.code, '  ', v.title }, { system = i })
     b.style = 't12_rail_button'
     b.style.width = d.rail - 16
     b.style.height = 38
-    b.tooltip = 'Открыть систему: ' .. v.title
+    b.tooltip = { 'tardis-ui.open-system', v.title }
   end
   local gauges = add(rail, 'flow', 'telemetry', nil, { direction = 'vertical' })
   gauges.style.vertical_spacing = 4
-  for _, m in ipairs({ { 'reserve', 'РЕЗЕРВ' }, { 'buffer', 'ХРАНИЛИЩЕ' }, {
-    'architecture',
-    'КОМНАТЫ',
-  } }) do
+  for _, m in ipairs({
+    { 'reserve', { 'tardis-ui.telemetry-reserve' } },
+    { 'buffer', { 'tardis-ui.telemetry-warehouse' } },
+    { 'architecture', { 'tardis-ui.telemetry-rooms' } },
+  }) do
     local card = add(gauges, 'flow', m[1], nil, { direction = 'vertical' })
     card.style.vertical_spacing = 0
     card.style.width = d.rail - 16
@@ -1227,13 +1104,13 @@ function UI.open(p, id, tab)
   local tabs = add(frame, 'tabbed-pane', 't12_tabs', nil, { style = 't12_tabs' })
   tabs.style.width = d.pane
   tabs.style.height = d.height - 24
-  navigation(p, f, panel(tabs, 'navigation', 'Навигация', p))
-  warehouse(p, f, panel(tabs, 'warehouse', 'Склад', p))
-  energy(p, f, panel(tabs, 'reactor', 'Реактор', p))
-  ports(p, f, panel(tabs, 'ports', 'Порты / Сеть', p))
-  rooms(p, f, panel(tabs, 'rooms', 'Комнаты', p))
-  restoration(p, f, panel(tabs, 'restoration', 'Восстановление', p))
-  eye(p, f, panel(tabs, 'eye', 'Око', p))
+  navigation(p, f, panel(tabs, 'navigation', p))
+  warehouse(p, f, panel(tabs, 'warehouse', p))
+  energy(p, f, panel(tabs, 'reactor', p))
+  ports(p, f, panel(tabs, 'ports', p))
+  rooms(p, f, panel(tabs, 'rooms', p))
+  restoration(p, f, panel(tabs, 'restoration', p))
+  eye(p, f, panel(tabs, 'eye', p))
   select_system(p, frame, selected)
   st.room_revision = f.room_revision
   frame.auto_center = true
@@ -1248,14 +1125,14 @@ function UI.status(p, f)
   local e = M.total_energy(f)
   local story = V.info(f)
   local location = valid(f.box) and M.surface_name(f.box.surface)
-    or valid(f.anchor) and 'ЯКОРЬ / НАУВИС'
-    or 'УПАКОВАНА'
-  local mode = story.returned and 'ИСТОРИЯ ЗАВЕРШЕНА'
-    or f.flight and 'В ПОЛЁТЕ'
-    or not story.console and 'КОНСОЛЬ ПОВРЕЖДЕНА'
-    or not story.eye and ('ЭНЕРГОМАШИНЫ ' .. Core.count(f) .. '/4')
-    or e < V.base_cost and 'ТРЕБУЕТСЯ ЗАРЯД'
-    or 'СИСТЕМЫ ГОТОВЫ'
+    or valid(f.anchor) and { 'tardis-ui.location-anchor' }
+    or { 'tardis-ui.location-packed' }
+  local mode = story.returned and { 'tardis-ui.mode-returned' }
+    or f.flight and { 'tardis-ui.mode-flight' }
+    or not story.console and { 'tardis-ui.mode-console-damaged' }
+    or not story.eye and { 'tardis-ui.mode-eye-machines', Core.count(f) }
+    or e < V.base_cost and { 'tardis-ui.mode-needs-charge' }
+    or { 'tardis-ui.mode-ready' }
   for _, system in ipairs(systems) do
     local panel = frame.t12_tabs[system.panel]
     panel.status.caption = { '', mode, '  ·  ', location }
@@ -1263,37 +1140,30 @@ function UI.status(p, f)
   end
   select_system(p, frame, frame.t12_tabs.selected_tab_index)
   local gauges = frame.t12_rail.telemetry
-  gauges.reserve.t12_metric.caption = string.format('%.2f / 10 ГДж', e / 1e9)
+  gauges.reserve.t12_metric.caption = { 'tardis-ui.telemetry-reserve-value', string.format('%.2f', e / 1e9) }
   gauges.buffer.t12_metric.caption = (#f.cargo - f.cargo.count_empty_stacks()) .. ' / ' .. #f.cargo
   gauges.architecture.t12_metric.caption = M.Rooms.count(f) .. ' / ' .. M.Rooms.max_rooms
   update_navigation(p, f, frame.t12_tabs.navigation)
   local reactor = frame.t12_tabs.reactor
-  reactor['reactor-gauges'].source.t12_metric.caption = string.format('%.0f МВт', story.recharge / 1e6)
-  reactor['reactor-condition'].caption = story.returned
-      and 'Око вернулось к Доктору. Заводу нужен собственный источник энергии.'
-    or not story.eye and string.format(
-      'Исправны %d из 4 энергомашин. Выработка %.0f МВт; для полёта завершите ремонт у звезды на нижнем уровне.',
-      Core.count(f),
-      story.recharge / 1e6
-    )
-    or 'Око стабильно. Общий резерв питает полёты, внешний контур и мобильный завод.'
+  reactor['reactor-gauges'].source.t12_metric.caption =
+    { 'tardis-ui.megawatts', string.format('%.0f', story.recharge / 1e6) }
+  reactor['reactor-condition'].caption = story.returned and { 'tardis-ui.reactor-returned' }
+    or not story.eye and {
+      'tardis-ui.reactor-partial',
+      string.format('%d', Core.count(f)),
+      string.format('%.0f', story.recharge / 1e6),
+    }
+    or { 'tardis-ui.reactor-stable' }
   reactor['t12-export'].enabled = story.recharge > 0 and not story.returned
   reactor['t12-export'].state = f.export == true
   reactor['t12-inner-power'].state = f.interior_power == true
   reactor['reactor-charge-time'].caption = story.recharge > 0
-      and string.format(
-        'Полная зарядка с нуля без нагрузки: %.0f секунд. При нагрузке время увеличивается.',
-        C.capacity / story.recharge
-      )
-    or 'Око начнёт зарядку после восстановления контура и хотя бы одного коллектора.'
+      and { 'tardis-ui.reactor-charge-time', string.format('%.0f', C.capacity / story.recharge) }
+    or { 'tardis-ui.reactor-charge-pending' }
   local circuit = f.circuit or {}
-  frame.t12_tabs.ports['circuit-condition'].caption = circuit.inhibit
-      and 'БЛОКИРОВКА ПРЫЖКОВ АКТИВНА'
+  frame.t12_tabs.ports['circuit-condition'].caption = circuit.inhibit and { 'tardis-ui.circuit-inhibit-active' }
     or circuit.last_error
-    or (
-      circuit.last_result == 1 and 'Последняя команда выполнена.'
-      or 'Терминалы готовы. Ожидается команда.'
-    )
+    or (circuit.last_result == 1 and { 'tardis-ui.circuit-last-ok' } or { 'tardis-ui.circuit-idle' })
   update_restoration(p, f, frame.t12_tabs.restoration)
   update_eye(p, f, frame.t12_tabs.eye)
 end
@@ -1306,7 +1176,7 @@ function UI.shortcut(e)
   if f then
     UI.open(p, f.id)
   else
-    tell(p, 'Сначала поставьте Тардис. Получить стартовую будку: /tardis')
+    tell(p, { 'tardis-ui.place-tardis-first' })
   end
 end
 function UI.opened(e)
@@ -1451,7 +1321,7 @@ function UI.click(e)
   elseif n == 't12-save-bookmark' then
     if f.box and f.box.valid and #f.bookmarks < 40 then
       f.bookmarks[#f.bookmarks + 1] = {
-        name = (st.bookmark_name or 'Моя база'):sub(1, 80),
+        name = (st.bookmark_name or '') ~= '' and st.bookmark_name:sub(1, 80) or { 'tardis-ui.default-bookmark' },
         surface = f.box.surface.index,
         x = f.box.position.x,
         y = f.box.position.y,
@@ -1476,7 +1346,7 @@ function UI.click(e)
     if ok then
       close(p)
     else
-      p.print(why or 'Не удалось покинуть помещение.')
+      p.print(why or { 'tardis-ui.leave-failed' })
       UI.status(p, f)
     end
   elseif n == 't12-recall' then
@@ -1484,7 +1354,7 @@ function UI.click(e)
   elseif n == 't12-deposit' and access(p, f) then
     local filter = st.filter
     local count = M.move(p.get_main_inventory(), f.cargo, filter)
-    tell(p, 'На склад передано: ' .. count .. ' предметов.')
+    tell(p, { 'tardis-ui.deposited', count })
     refresh(p, 2)
   elseif tags.item and access(p, f) then
     local count = M.move(
@@ -1494,7 +1364,7 @@ function UI.click(e)
       e.shift and 1e9 or prototypes.item[tags.item].stack_size
     )
     if count == 0 then
-      tell(p, 'В инвентаре нет места.')
+      tell(p, { 'tardis-ui.inventory-full' })
     end
     refresh(p, 2)
   elseif n == 't12-upgrade' then
@@ -1551,7 +1421,7 @@ function UI.click(e)
       st.return_confirm = true
       update_restoration(p, f, p.gui.screen.t12.t12_tabs.restoration)
     else
-      why = reason or 'Откройте протокол изнутри ТАРДИС.'
+      why = reason or { 'tardis-ui.return-open-inside' }
     end
   elseif n == 't12-return-doctor-cancel' then
     st.return_confirm = false
@@ -1673,9 +1543,8 @@ function UI.tick()
           local room = f.rooms[st.room_slot or 1]
           if room and room.state == 'building' and view['build-progress'] then
             view['build-progress'].value = math.min(1, (game.tick - room.started) / M.Rooms.build_ticks)
-            view['room-countdown'].caption = 'Перестройка внутреннего пространства: '
-              .. math.max(0, math.ceil((room.finish - game.tick) / 60))
-              .. ' сек.'
+            view['room-countdown'].caption =
+              { 'tardis-ui.room-countdown', math.max(0, math.ceil((room.finish - game.tick) / 60)) }
           elseif view.projects then
             for _, kind in ipairs(M.Rooms.order) do
               local plan = M.Rooms.plans[kind]

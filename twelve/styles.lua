@@ -12,11 +12,15 @@ local function empty()
   return { base = { type = 'none' }, shadow = { type = 'none' }, glow = { type = 'none' } }
 end
 local function skin(name)
-  return { base = { filename = P .. 'ui-' .. name .. '.png', position = { 0, 0 }, corner_size = 12 }, shadow = {
-    type = 'none',
-  }, glow = {
-    type = 'none',
-  } }
+  return {
+    base = { filename = P .. 'ui-' .. name .. '.png', position = { 0, 0 }, corner_size = 12 },
+    shadow = {
+      type = 'none',
+    },
+    glow = {
+      type = 'none',
+    },
+  }
 end
 local function flat(color)
   -- A white 3x3 patch supplies a flat tint, without inheriting stone, dirt,
@@ -53,12 +57,26 @@ data:extend({
     height = 256,
     flags = { 'gui-icon' },
   },
-  { type = 'sprite', name = 't12-orbit-divider', filename = P .. 'ui-orbit-divider.png', width = 768, height = 48, flags = {
-    'gui-icon',
-  } },
-  { type = 'sprite', name = 't12-route-dial', filename = P .. 'ui-route-dial.png', width = 512, height = 256, flags = {
-    'gui-icon',
-  } },
+  {
+    type = 'sprite',
+    name = 't12-orbit-divider',
+    filename = P .. 'ui-orbit-divider.png',
+    width = 768,
+    height = 48,
+    flags = {
+      'gui-icon',
+    },
+  },
+  {
+    type = 'sprite',
+    name = 't12-route-dial',
+    filename = P .. 'ui-route-dial.png',
+    width = 512,
+    height = 256,
+    flags = {
+      'gui-icon',
+    },
+  },
 })
 
 S.t12_shell = {
@@ -207,7 +225,13 @@ S.t12_dropdown = {
   left_padding = 0,
   right_padding = 0,
   selector_and_title_spacing = 8,
-  button_style = { type = 'button_style', parent = 't12_button', horizontal_align = 'left', left_padding = 10, right_padding = 6 },
+  button_style = {
+    type = 'button_style',
+    parent = 't12_button',
+    horizontal_align = 'left',
+    left_padding = 10,
+    right_padding = 6,
+  },
   icon = {
     filename = '__core__/graphics/icons/mip/dropdown.png',
     size = 32,
