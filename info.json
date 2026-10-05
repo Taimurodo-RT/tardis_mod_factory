@@ -1,0 +1,12 @@
+{
+  "name": "tardis",
+  "version": "1.5.0",
+  "title": "TARDIS XII: The Otherworld Console",
+  "author": "Local edition; based on Mishin870, MagmaMcFry, notnotmelon",
+  "factorio_version": "2.0",
+  "dependencies": [
+    "base >= 2.0.77",
+    "space-age >= 2.0.77"
+  ],
+  "description": "A crashed Type 40: repair the Eye of Harmony, build a mobile factory, navigate researched worlds by route distance, connect circuit networks and return the TARDIS to the Doctor beyond the solar-system edge."
+}

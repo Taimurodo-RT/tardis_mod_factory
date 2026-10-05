@@ -1,0 +1,81 @@
+---------------------------------------------------------------------------------------------------
+Version: 1.5.0
+Date: 2026-10-05
+  Graphics:
+    - Replaced the console's stock-style tabs with a seven-system Type 40 side rail.
+    - Added dark glass panels, circular symbols, amber accents and cyan instrument controls.
+    - Restyled fields, dropdowns, checkboxes, inventory slots and scrollbars.
+  Bugfixes:
+    - Centered the physical console on its original round platform, preserving its entity and contents.
+    - Existing neighbouring equipment blocks the adjustment safely instead of being moved or destroyed.
+  Gui:
+    - Preserved the warehouse, room planning, repair, power, navigation and Eye controls.
+    - Moved long explanations into tooltips and fitted the console to the available screen area.
+---------------------------------------------------------------------------------------------------
+Version: 1.2.0
+Date: 2026-10-04
+  Features:
+    - Added six constructible interior rooms: workshop, dimensional warehouse and library.
+    - Room materials come from the shared warehouse; pending construction and refunds survive saves.
+    - Warehouse rooms add 4096 slots, replacing free GUI capacity doubling.
+  Graphics:
+    - Front-facing Twelfth Doctor police box with proximity-operated doors.
+    - Dark steel, cyan and brass console UI with live resources and room planning.
+    - Library artwork and compact internal power relays.
+  Compatibility:
+    - Existing local 1.1.0 interiors, cargo and machines survive upgrade.
+---------------------------------------------------------------------------------------------------
+Version: 1.0.3
+Date: 2026-02-15
+  Bugfixes:
+    - Fixed critical position desync bug where TARDIS becomes inaccessible after teleportation and keys stop working
+    - Fixed mechsuit entry issue - TARDIS now checks the entire building area instead of just the door
+    - Fixed door hitbox in TARDIS entry script
+    - Fixed key synchronizer receiving extra inventory slot from quality
+    - Fixed TARDIS information in Factoriopedia
+    - Fixed console animation positioning
+  Balancing:
+    - New difficulty tier - Space (available only with Space Age DLC)
+    - Rebalanced recipes and technology costs
+  Graphics:
+    - Fixed key texture in cursor and Factoriopedia, improved key texture
+    - Added teleportation animation for TARDIS exterior
+  Locale:
+    - Added missing localization strings
+---------------------------------------------------------------------------------------------------
+Version: 1.0.2
+Date: 2026-02-14
+  Bugfixes:
+    - Fixed collision boxes for TARDIS and console, now aligned to grid. Existing buildings are not affected. To update an existing console, remove all items from the TARDIS room including fuel from the console, then rebuild the TARDIS
+  Features:
+    - New mechanic - TARDIS recall keys with 10 color variants
+    - New building - key synchronizer for binding keys to TARDIS
+    - Smart algorithm for alerts teleportation
+  Changes:
+    - Minor refactoring
+---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2026-02-12
+  Features:
+    - Added mod settings: fuel type/amount, technology/recipe difficulty, map teleport toggle, space platform blocking
+    - Improved teleportation algorithm: pre-checks safe landing and cycles through alerts before consuming fuel
+  Bugfixes:
+    - Compatibility with "Everything on Nauvis" mod
+---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+Date: 2026-02-10
+  Changes:
+    - Initial release with pocket dimensions and teleportation
+---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2026-10-04
+  Major Features:
+    - Twelfth Doctor inspired exterior, console room and buildable cargo annex.
+    - Persistent 2048-32768 slot warehouse with quality-aware search and native item stack transfer.
+    - Planet navigation, bookmarks, previous destination, recall and safe landing checks.
+    - Stationary cargo input/output ports with item/quality filters and reserved stock.
+    - Shared 10 GJ reserve, 50 MW recharge, 200 MW external and 20 MW interior output.
+    - Actual electrical consumption can prevent flight until the reserve recharges.
+  Changes:
+    - Local standalone runtime replaces the original teleportation control scripts.
+    - Russian terminal and separate isolated demonstration launcher.
