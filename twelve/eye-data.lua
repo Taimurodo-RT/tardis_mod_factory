@@ -54,7 +54,8 @@ data:extend({
     selectable_in_game = false,
     collision_mask = { layers = {} },
     collision_box = { { 0, 0 }, { 0, 0 } },
-    picture = { filename = P .. 'star.png', width = 1024, height = 1024, scale = 0.43, apply_runtime_tint = true },
+    -- Drawn by the 'tardis-eye-core' animation; the entity only anchors it.
+    picture = util.empty_sprite(),
     render_layer = 'object',
   },
   {
@@ -67,11 +68,19 @@ data:extend({
     shift = { 0, -1 },
   },
   {
-    type = 'sprite',
-    name = 'tardis-eye-star-glow',
-    filename = P .. 'star.png',
-    width = 1024,
-    height = 1024,
-    scale = 0.43,
+    -- Blender loop (tools/blender/eye_star.py): star and three gyroscope rings, 96 frames.
+    -- 512 px frames of 6.2 units; scale 1.16 makes the star's disc 6 tiles across, centred over the
+    -- pit. Drawn as glow: the render carries its own lighting, so the dark hall must not dim it.
+    type = 'animation',
+    name = 'tardis-eye-core',
+    width = 512,
+    height = 512,
+    frame_count = 96,
+    scale = 1.16,
+    draw_as_glow = true,
+    stripes = {
+      { filename = P .. 'eye-core-1.png', width_in_frames = 8, height_in_frames = 8 },
+      { filename = P .. 'eye-core-2.png', width_in_frames = 8, height_in_frames = 4 },
+    },
   },
 })

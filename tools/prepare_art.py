@@ -55,26 +55,7 @@ def tint(glow, r, g, b, a, below):
 # Console: already a clean cut-out.
 save(square(load('console.png')), 'console.png', 512)
 
-# Star: keep the disc, rebuild a smooth corona fade so no fringe can show around it.
-star = load('star.png')
-disc, span = 0.29 * star.width, 0.24 * star.width
 
-
-def star_px(x, y, d, r, g, b, a):
-    if d <= disc:
-        return tint((255, 150, 60), r, g, b, a, 250)
-    # Outside the disc: a clean round corona (the generated one had a ragged, fringed cut-out).
-    fade = max(0.0, 1 - (d - disc) / span) ** 1.8
-    k = 0.62 + 0.38 * fade
-    return int(255 * k), int(150 * k), int(60 * k), int(235 * fade)
-
-
-save(square(process(star, star_px)), 'star.png', 1024)
-
-# Containment ring: drop the clipped stub at the top edge, clean the glow fringe.
-ring = load('ring.png')
-save(square(process(ring, lambda x, y, d, r, g, b, a: (0, 0, 0, 0) if y < 22 else tint((255, 145, 45), r, g, b, a, 235))),
-     'eye-ring.png', 1024)
 
 # Glass floor: keep the round panel only, with a soft edge.
 glass = load('glass-floor.png')
@@ -88,3 +69,16 @@ glow = Image.new('RGBA', (256, 256))
 process(glow, lambda x, y, d, r, g, b, a: (255, 255, 255, int(255 * max(0.0, 1 - d / 127) ** 2.2)))
 glow.save(OUT / 'glow.png', optimize=True)
 print('glow.png: 256x256')
+
+# Eye of Harmony: Blender loop (tools/blender/eye_star.py) -> two 8x8 sheets of 512 px frames.
+loop = sorted((ROOT / 'art/render/star/loop').glob('*.png'))
+if loop:
+    frames = [Image.open(f).convert('RGBA').resize((512, 512), Image.LANCZOS) for f in loop]
+    for n, start in enumerate(range(0, len(frames), 64), 1):
+        chunk = frames[start:start + 64]
+        rows = (len(chunk) + 7) // 8
+        sheet = Image.new('RGBA', (8 * 512, rows * 512))
+        for i, fr in enumerate(chunk):
+            sheet.paste(fr, ((i % 8) * 512, (i // 8) * 512))
+        sheet.save(OUT / f'eye-core-{n}.png', optimize=True)
+        print(f'eye-core-{n}.png: {len(chunk)} frames')

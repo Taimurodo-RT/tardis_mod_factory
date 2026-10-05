@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.8.0
+Date: 2026-10-05
+  Graphics:
+    - The Eye of Harmony is now a 3D-rendered loop: a boiling star with sunspots inside three gyroscope containment rings that tumble around it.
+    - The rings turn faster and the star burns cleaner as energy machines are repaired; it dims when the TARDIS returns to the Doctor.
+---------------------------------------------------------------------------------------------------
 Version: 1.7.0
 Date: 2026-10-05
   Features:

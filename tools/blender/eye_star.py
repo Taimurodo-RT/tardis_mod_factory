@@ -69,7 +69,7 @@ def star_material():
     add.operation = 'ADD'
     t.links.new(coord.outputs['Object'], add.inputs[0])
     t.links.new(offset.outputs['Vector'], add.inputs[1])
-    cells = node(t, 'ShaderNodeTexNoise', Scale=5.5, Detail=8.0, Roughness=0.62)
+    cells = node(t, 'ShaderNodeTexNoise', Scale=8.0, Detail=10.0, Roughness=0.66)
     t.links.new(add.outputs['Vector'], cells.inputs['Vector'])
     ramp = t.nodes.new('ShaderNodeValToRGB')
     r = ramp.color_ramp
@@ -78,13 +78,27 @@ def star_material():
     mid = r.elements.new(0.52)
     mid.color = (1.0, 0.33, 0.02, 1)
     t.links.new(cells.outputs['Fac'], ramp.inputs['Fac'])
+    # A few dark sunspots from a slow, coarse noise.
+    spots = node(t, 'ShaderNodeTexNoise', Scale=2.2, Detail=3.0, Roughness=0.5)
+    t.links.new(add.outputs['Vector'], spots.inputs['Vector'])
+    spot_ramp = t.nodes.new('ShaderNodeValToRGB')
+    sr = spot_ramp.color_ramp
+    sr.elements[0].position, sr.elements[0].color = 0.66, (1, 1, 1, 1)
+    sr.elements[1].position, sr.elements[1].color = 0.74, (0.12, 0.05, 0.03, 1)
+    t.links.new(spots.outputs['Fac'], spot_ramp.inputs['Fac'])
+    spotted = t.nodes.new('ShaderNodeMix')
+    spotted.data_type = 'RGBA'
+    spotted.blend_type = 'MULTIPLY'
+    spotted.inputs['Factor'].default_value = 1.0
+    t.links.new(ramp.outputs['Color'], spotted.inputs['A'])
+    t.links.new(spot_ramp.outputs['Color'], spotted.inputs['B'])
     # Limb: the edge of the disc glows hotter, like a real star seen through its photosphere.
     weight = node(t, 'ShaderNodeLayerWeight', Blend=0.18)
     limb = t.nodes.new('ShaderNodeMix')
     limb.data_type = 'RGBA'
     limb.inputs['B'].default_value = (1.0, 0.55, 0.12, 1)
     t.links.new(weight.outputs['Fresnel'], limb.inputs['Factor'])
-    t.links.new(ramp.outputs['Color'], limb.inputs['A'])
+    t.links.new(spotted.outputs['Result'], limb.inputs['A'])
     emit = node(t, 'ShaderNodeEmission', Strength=2.2)
     t.links.new(limb.outputs['Result'], emit.inputs['Color'])
     out = t.nodes.new('ShaderNodeOutputMaterial')
@@ -122,29 +136,82 @@ def corona_material():
     return m
 
 
-def metal(name, color, rough):
+def radial_step(t, count, width):
+    """1 on thin radial seams around the object's Z axis (panel joints / dash gaps), else 0."""
+    coord = t.nodes.new('ShaderNodeTexCoord')
+    angle = t.nodes.new('ShaderNodeTexGradient')
+    angle.gradient_type = 'RADIAL'
+    t.links.new(coord.outputs['Object'], angle.inputs['Vector'])
+    mul = t.nodes.new('ShaderNodeMath')
+    mul.operation = 'MULTIPLY'
+    mul.inputs[1].default_value = count
+    t.links.new(angle.outputs['Fac'], mul.inputs[0])
+    frac = t.nodes.new('ShaderNodeMath')
+    frac.operation = 'FRACT'
+    t.links.new(mul.outputs['Value'], frac.inputs[0])
+    seam = t.nodes.new('ShaderNodeMath')
+    seam.operation = 'LESS_THAN'
+    seam.inputs[1].default_value = width
+    t.links.new(frac.outputs['Value'], seam.inputs[0])
+    return seam.outputs['Value']
+
+
+def weathered(name, color, rough, panels=0, grime_scale=9.0, dark=0.35):
+    """Factorio-style worn metal: dark grime blotches, scuffed roughness, optional panel seams."""
     m = bpy.data.materials.new(name)
     m.use_nodes = True
-    p = m.node_tree.nodes['Principled BSDF']
-    p.inputs['Base Color'].default_value = color
-    p.inputs['Metallic'].default_value = 1.0
-    p.inputs['Roughness'].default_value = rough
+    t = m.node_tree
+    p = t.nodes['Principled BSDF']
+    p.inputs['Metallic'].default_value = 0.75
+    coord = t.nodes.new('ShaderNodeTexCoord')
+    grime = node(t, 'ShaderNodeTexNoise', Scale=grime_scale, Detail=10.0, Roughness=0.7)
+    t.links.new(coord.outputs['Object'], grime.inputs['Vector'])
+    ramp = t.nodes.new('ShaderNodeValToRGB')
+    r = ramp.color_ramp
+    r.elements[0].position, r.elements[0].color = 0.35, tuple(c * dark for c in color[:3]) + (1,)
+    r.elements[1].position, r.elements[1].color = 0.62, color
+    t.links.new(grime.outputs['Fac'], ramp.inputs['Fac'])
+    base = ramp.outputs['Color']
+    if panels:
+        dark = t.nodes.new('ShaderNodeMix')
+        dark.data_type = 'RGBA'
+        dark.inputs['B'].default_value = (0.03, 0.03, 0.03, 1)
+        t.links.new(radial_step(t, panels, 0.035), dark.inputs['Factor'])
+        t.links.new(base, dark.inputs['A'])
+        base = dark.outputs['Result']
+    t.links.new(base, p.inputs['Base Color'])
+    scuff = t.nodes.new('ShaderNodeMapRange')
+    scuff.inputs['To Min'].default_value = rough - 0.15
+    scuff.inputs['To Max'].default_value = rough + 0.2
+    t.links.new(grime.outputs['Fac'], scuff.inputs['Value'])
+    t.links.new(scuff.outputs['Result'], p.inputs['Roughness'])
     return m
 
 
-def glow(name, color, strength):
+def conduit(name, color, strength, dashes):
+    """Glowing channel broken into dashes, like the lit slots on Factorio machines."""
     m = bpy.data.materials.new(name)
     m.use_nodes = True
-    p = m.node_tree.nodes['Principled BSDF']
-    p.inputs['Base Color'].default_value = color
+    t = m.node_tree
+    p = t.nodes['Principled BSDF']
+    p.inputs['Base Color'].default_value = (0.05, 0.03, 0.02, 1)
     p.inputs['Emission Color'].default_value = color
-    p.inputs['Emission Strength'].default_value = strength
+    on = t.nodes.new('ShaderNodeMath')
+    on.operation = 'MULTIPLY'
+    on.inputs[1].default_value = strength
+    gap = radial_step(t, dashes, 0.35)
+    inv = t.nodes.new('ShaderNodeMath')
+    inv.operation = 'SUBTRACT'
+    inv.inputs[0].default_value = 1.0
+    t.links.new(gap, inv.inputs[1])
+    t.links.new(inv.outputs['Value'], on.inputs[0])
+    t.links.new(on.outputs['Value'], p.inputs['Emission Strength'])
     return m
 
 
-steel = metal('steel', (0.42, 0.41, 0.4, 1), 0.42)
-brass = metal('brass', (0.8, 0.56, 0.24, 1), 0.32)
-amber = glow('amber', (1.0, 0.45, 0.08, 1), 5.0)
+steel = weathered('steel', (0.36, 0.35, 0.33, 1), 0.5, panels=16)
+brass = weathered('brass', (0.72, 0.5, 0.22, 1), 0.36, grime_scale=2.5, dark=0.7)
+amber = conduit('amber', (1.0, 0.45, 0.08, 1), 6.0, 40)
 
 bpy.ops.mesh.primitive_uv_sphere_add(segments=96, ring_count=48, radius=1.0)
 star = bpy.context.object
@@ -209,7 +276,9 @@ def ring(major, minor, tilt, axis, turns, clamps, phase=0.0, precess=0):
 # Key light from the top-left, as in Factorio's own renders.
 sun = bpy.data.objects.new('sun', bpy.data.lights.new('sun', 'SUN'))
 sun.data.energy = 2.5
-sun.rotation_euler = (math.radians(35), math.radians(-30), math.radians(-40))
+sun.data.angle = math.radians(12)
+# Mostly overhead, from the north-west: a short shadow falling south-east.
+sun.rotation_euler = (math.radians(22), math.radians(-14), 0)
 scene.collection.objects.link(sun)
 
 rings = [
@@ -226,11 +295,16 @@ for a in bpy.data.actions:
                     for k in fc.keyframe_points:
                         k.interpolation = 'LINEAR'
 
+# Shadow catcher under the rings: Factorio objects cast a soft shadow on the floor.
+bpy.ops.mesh.primitive_plane_add(size=14, location=(0, 0, -2.4))
+floor = bpy.context.object
+floor.is_shadow_catcher = True
+
 # Orthographic camera at a Factorio-like angle: looking down, tilted towards the north.
 cam = bpy.data.objects.new('cam', bpy.data.cameras.new('cam'))
 scene.collection.objects.link(cam)
 cam.data.type = 'ORTHO'
-cam.data.ortho_scale = 5.6
+cam.data.ortho_scale = 6.2
 tilt = math.radians(40)
 cam.location = (0, -20 * math.sin(tilt), 20 * math.cos(tilt))
 cam.rotation_euler = (tilt, 0, 0)

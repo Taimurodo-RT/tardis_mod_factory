@@ -200,28 +200,22 @@ function E.ensure(f)
   if not valid(room.star) then
     room.star = create(f, 'tardis-eye-star', { 0, 0 })
   end
-  if not valid(room.halo) then
-    room.halo = tracked(
-      room,
-      rendering.draw_sprite({
-        sprite = 'tardis-eye-star-glow',
-        surface = f.eye_surface,
-        target = room.star,
-        render_layer = 'higher-object-above',
-        tint = { 1, 0.6, 0.25, 0.16 },
-        x_scale = 1.03,
-        y_scale = 1.03,
-      })
-    )
+  -- 1.7 drew a flat star with a separate turning ring; the 3D loop replaces both.
+  for _, key in ipairs({ 'halo', 'ring' }) do
+    if valid(room[key]) then
+      room[key].destroy()
+    end
+    room[key] = nil
   end
-  if not valid(room.ring) then
-    room.ring = tracked(
+  if not valid(room.core) then
+    room.core = tracked(
       room,
-      rendering.draw_sprite({
-        sprite = 'tardis-eye-ring',
+      rendering.draw_animation({
+        animation = 'tardis-eye-core',
         surface = f.eye_surface,
         target = { 0, 0 },
-        render_layer = 'higher-object-under',
+        render_layer = 'object',
+        animation_speed = 0.1,
       })
     )
   end
@@ -481,18 +475,12 @@ function E.tick(f)
     room.star.color = returned and { 0.08, 0.1, 0.12, 1 }
       or (repaired == 4 and { 1, 1, 1, 1 } or { 0.78, 0.52, 0.4, 1 })
   end
-  if valid(room.halo) then
-    room.halo.visible = not returned
-    room.halo.x_scale = 1.015 + 0.018 * pulse
-    room.halo.y_scale = room.halo.x_scale
-    room.halo.color = { 1, 0.56, 0.2, 0.11 + 0.06 * pulse }
-  end
-  if valid(room.ring) then
-    -- The containment ring turns faster as more energy machines come back online.
-    if not returned then
-      room.ring.orientation = (room.ring.orientation + (1 + repaired) / (60 * 240 / 6)) % 1
-    end
-    room.ring.color = returned and { 0.45, 0.48, 0.52, 1 } or { 1, 1, 1, 1 }
+  if valid(room.core) then
+    -- The rings turn faster and the star burns cleaner as energy machines come back online.
+    room.core.animation_speed = returned and 0 or (0.08 + 0.05 * repaired)
+    room.core.color = returned and { 0.25, 0.27, 0.3, 1 }
+      or repaired == 4 and { 1, 1, 1, 1 }
+      or { 0.85 + 0.15 * pulse, 0.62, 0.5, 1 }
   end
   if valid(room.star_light) then
     room.star_light.intensity = returned and 0 or (0.48 + 0.12 * pulse + 0.025 * repaired)
