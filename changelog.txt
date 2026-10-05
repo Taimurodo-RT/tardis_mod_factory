@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.5.1
+Date: 2026-10-05
+  Changes:
+    - Removed the unused runtime, prototypes, graphics and locale keys inherited from the original TARDIS mod.
+    - The exterior box and console prototypes are now defined once, without data-stage overrides.
+    - Removed the hidden, unused TARDIS recipe.
+  Locale:
+    - Mod name and description now match the TARDIS XII edition.
+---------------------------------------------------------------------------------------------------
 Version: 1.5.0
 Date: 2026-10-05
   Graphics:

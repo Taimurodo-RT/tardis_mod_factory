@@ -3,18 +3,7 @@ local P='__tardis__/graphics/twelve/'
 data:extend{{type='item-subgroup',name='tardis',group='logistics',order='z-tardis'}}
 require('prototypes.tardis')
 require('prototypes.console')
-local box=data.raw['storage-tank'].tardis
-box.icon=P..'exterior-icon.png'
-box.collision_box={{-.85,-.85},{.85,.85}};box.selection_box={{-1,-2.8},{1,1}}
-box.pictures={picture={filename=P..'exterior.png',width=256,height=384,scale=.34,shift={0,-1.05}}}
-box.flags={'player-creation','placeable-player','not-rotatable'}
-box.is_military_target=false;box.max_health=10000
-data.raw.item.tardis.icon=P..'exterior-icon.png'
-data.raw['item-with-tags']['tardis-instantiated'].icons={{icon=P..'exterior-icon.png',icon_size=64}}
 local console=data.raw.container['tardis-console']
-console.icon=P..'console-icon.png';console.inventory_size=1
-console.picture={filename=P..'console.png',width=512,height=512,scale=.48,shift={0,-1.6}}
-console.collision_box={{-2.4,-1.8},{2.4,1.8}};console.selection_box={{-2.9,-5},{2.9,2}}
 local function port(name,base,tint)
   local p=table.deepcopy(data.raw['logistic-container'][base]);p.name=name
   p.minable={mining_time=.2,result=name};p.inventory_size=96
@@ -49,8 +38,7 @@ data:extend{terminal,power,pole,relay,floor,
  {type='sprite',name='tardis-library-room',filename=P..'library-room.png',width=1536,height=1280,scale=.5},
  {type='sprite',name='tardis-room',filename=P..'room.png',width=1536,height=1536,scale=.75},
  {type='custom-input',name='tardis-control',key_sequence='CONTROL + T',consuming='none'},
- {type='shortcut',name='tardis-control',action='lua',icon=P..'console-icon.png',icon_size=64,small_icon=P..'console-icon.png',small_icon_size=64},
- {type='recipe',name='tardis',enabled=true,energy_required=10,ingredients={{type='item',name='steel-plate',amount=20},{type='item',name='electronic-circuit',amount=20}},results={{type='item',name='tardis',amount=1}}}}
+ {type='shortcut',name='tardis-control',action='lua',icon=P..'console-icon.png',icon_size=64,small_icon=P..'console-icon.png',small_icon_size=64}}
 require('twelve.styles')
 require('twelve.voyage-data')
 require('twelve.circuit-data')
@@ -69,8 +57,6 @@ data:extend{exit,{type='sprite',name='tardis-circular-rim',filename=P..'circular
 data:extend{{type='simple-entity-with-owner',name='tardis-rim-collider',icon=P..'console-icon.png',icon_size=64,
  flags={'not-on-map','not-blueprintable','not-deconstructable'},hidden=true,selectable_in_game=false,
  collision_box={{-.48,-.48},{.48,.48}},collision_mask={layers={object=true,player=true}},picture=util.empty_sprite(),max_health=1000}}
--- A recovered Type 40 is found at the crash site; it cannot be mass produced.
-data.raw.recipe.tardis.enabled=false
-data.raw.recipe.tardis.hidden=true
+-- A recovered Type 40 is found at the crash site; it has no recipe and cannot be mass produced.
 
 
