@@ -32,3 +32,6 @@ dist/
 # Backup files
 *.bak
 *.backup
+
+# Blender render output (regenerate with tools/blender/*.py)
+art/render/**/loop/
