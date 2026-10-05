@@ -233,11 +233,28 @@ function E.ensure(f)
       })
     )
   end
+  -- The Eye hall is a closed chamber: same wall as the console room, openings filled in (1.9).
+  if valid(room.rim) and room.rim.sprite ~= 'tardis-eye-rim' then
+    room.rim.destroy()
+  end
+  if not valid(room.hull) then
+    room.hull = tracked(
+      room,
+      rendering.draw_sprite({
+        sprite = 'tardis-hull-ring',
+        surface = f.eye_surface,
+        target = { 0, 0 },
+        render_layer = 'above-tiles',
+        x_scale = 2.15,
+        y_scale = 2.15,
+      })
+    )
+  end
   if not valid(room.rim) then
     room.rim = tracked(
       room,
       rendering.draw_sprite({
-        sprite = 'tardis-circular-rim',
+        sprite = 'tardis-eye-rim',
         surface = f.eye_surface,
         target = { 0, 0 },
         render_layer = 'floor',

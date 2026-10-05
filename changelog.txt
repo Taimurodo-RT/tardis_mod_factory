@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.9.0
+Date: 2026-10-05
+  Graphics:
+    - The Eye hall is a closed round chamber: its wall ring has no openings any more.
+    - A dark hull band outside both round rooms hides the stepped tile edge; the console room keeps its corridors open.
+    - The hatch and the ladder are now a spiral stair: down a shaft lit by the star, and up towards the console room.
+  Changes:
+    - Removed the unused old console-room floor picture.
+---------------------------------------------------------------------------------------------------
 Version: 1.8.0
 Date: 2026-10-05
   Graphics:

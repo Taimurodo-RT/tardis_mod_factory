@@ -31,13 +31,17 @@ hatch.max_health = 10000
 hatch.inventory_size = 1
 hatch.icon = P .. 'hatch-icon.png'
 hatch.icon_size = 64
-hatch.picture = { filename = P .. 'hatch.png', width = 256, height = 256, scale = 0.30, shift = { 0, -0.2 } }
+-- Spiral stair down a shaft lit by the star (Blender render, tools/blender/stair.py).
+hatch.picture = { filename = P .. 'stair-down.png', size = 384, scale = 0.33 }
 hatch.collision_box = { { -0.6, -0.45 }, { 0.6, 0.45 } }
-hatch.selection_box = { { -1.25, -1.35 }, { 1.25, 1.25 } }
+hatch.selection_box = { { -1.9, -1.7 }, { 1.9, 1.7 } }
 local ladder = table.deepcopy(hatch)
 ladder.name = 'tardis-eye-ladder'
 ladder.localised_name = { 'entity-name.tardis-eye-ladder' }
 ladder.localised_description = { 'entity-description.tardis-eye-ladder' }
+-- The same stair seen from below, climbing towards the console room's light.
+ladder.picture = { filename = P .. 'stair-up.png', size = 384, scale = 0.42, shift = { 0, -0.9 } }
+ladder.selection_box = { { -2, -2.6 }, { 2, 1.6 } }
 
 data:extend({
   machine,

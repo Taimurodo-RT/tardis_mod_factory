@@ -284,7 +284,6 @@ local function interior(f)
     end
   end
   s.set_tiles(tiles, true)
-  f.art = rendering.draw_sprite({ sprite = 'tardis-room', surface = s, target = { 1.2, 1.65 }, render_layer = 'floor' })
   f.console = protect(s.create_entity({ name = 'tardis-console', position = { 0, 0 }, force = f.force }))
   f.terminal = protect(s.create_entity({ name = 'tardis-terminal', position = { 24, -3 }, force = f.force }))
   f.inner_power = protect(s.create_entity({ name = 'tardis-power', position = { 31, 5 }, force = f.force }))

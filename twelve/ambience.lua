@@ -29,6 +29,16 @@ function A.ensure(f)
       render_layer = 'floor',
     })
   end
+  if not valid(a.hull) then
+    a.hull = rendering.draw_sprite({
+      sprite = 'tardis-hull-ring-console',
+      surface = f.surface,
+      target = { 0, 0 },
+      render_layer = 'above-tiles',
+      x_scale = 1.09,
+      y_scale = 1.09,
+    })
+  end
   if not valid(a.under) then
     a.under = rendering.draw_sprite({
       sprite = 'tardis-glow',
