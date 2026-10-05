@@ -945,9 +945,13 @@ function M.demo(p)
 end
 function M.ensure_decor(f)
   Ambience.ensure(f)
+  -- 1.10: Blender-rendered wall ring whose hull matches it exactly (tools/blender/rooms.py).
+  if f.rim and f.rim.valid and f.rim.sprite ~= 'tardis-console-wall' then
+    f.rim.destroy()
+  end
   if not (f.rim and f.rim.valid) then
     f.rim = rendering.draw_sprite({
-      sprite = 'tardis-circular-rim',
+      sprite = 'tardis-console-wall',
       surface = f.surface,
       target = { 0, 0 },
       render_layer = 'floor',

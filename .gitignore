@@ -35,3 +35,5 @@ dist/
 
 # Blender render output (regenerate with tools/blender/*.py)
 art/render/**/loop/
+art/render/rooms/check-*.png
+art/render/**/check*.png

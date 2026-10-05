@@ -53,7 +53,7 @@ def material(name, color, metallic, rough, emit=0.0):
 
 def stair(direction):
     """direction +1 climbs up from the floor, -1 winds down into a shaft."""
-    steel = material('steel', (0.3, 0.29, 0.28, 1), 0.75, 0.5)
+    steel = material('steel', (0.42, 0.41, 0.39, 1), 0.7, 0.45)
     brass = material('brass', (0.72, 0.5, 0.22, 1), 0.9, 0.35)
     steps, rise, turn = 16, 0.17, math.radians(24)
     bpy.ops.mesh.primitive_cylinder_add(radius=0.11, depth=steps * rise + 0.4,
@@ -102,7 +102,7 @@ def stair(direction):
         scene.collection.objects.link(light)
     else:
         light = bpy.data.objects.new('above', bpy.data.lights.new('above', 'POINT'))
-        light.data.energy, light.data.color = 35, (0.75, 0.9, 1.0)
+        light.data.energy, light.data.color = 110, (0.75, 0.9, 1.0)
         light.location = (0, 0.2, steps * rise + 0.6)
         scene.collection.objects.link(light)
     sun = bpy.data.objects.new('sun', bpy.data.lights.new('sun', 'SUN'))

@@ -29,15 +29,12 @@ function A.ensure(f)
       render_layer = 'floor',
     })
   end
-  if not valid(a.hull) then
-    a.hull = rendering.draw_sprite({
-      sprite = 'tardis-hull-ring-console',
-      surface = f.surface,
-      target = { 0, 0 },
-      render_layer = 'above-tiles',
-      x_scale = 1.09,
-      y_scale = 1.09,
-    })
+  -- The separate hull band of 1.9 is part of the console wall render now.
+  if a.hull then
+    if valid(a.hull) then
+      a.hull.destroy()
+    end
+    a.hull = nil
   end
   if not valid(a.under) then
     a.under = rendering.draw_sprite({

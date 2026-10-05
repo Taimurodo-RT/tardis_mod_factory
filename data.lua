@@ -137,14 +137,6 @@ exit.collision_mask = { layers = {} }
 exit.selection_box = { { -1.7, -3.5 }, { 1.7, 1 } }
 data:extend({
   exit,
-  {
-    type = 'sprite',
-    name = 'tardis-circular-rim',
-    filename = P .. 'circular-rim.png',
-    width = 1536,
-    height = 1536,
-    scale = 0.65,
-  },
 })
 data:extend({
   {

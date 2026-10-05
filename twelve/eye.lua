@@ -197,6 +197,21 @@ function E.ensure(f)
       })
     )
   end
+  if not valid(room.ladder_light) and valid(room.ladder) then
+    -- Pale light falling down the stair from the console room above.
+    room.ladder_light = tracked(
+      room,
+      rendering.draw_light({
+        sprite = 'utility/light_medium',
+        surface = f.eye_surface,
+        target = { entity = room.ladder, offset = { 0, -1.5 } },
+        color = { 0.75, 0.88, 1 },
+        scale = 1.6,
+        intensity = 0.8,
+        minimum_darkness = 0,
+      })
+    )
+  end
   if not valid(room.star) then
     room.star = create(f, 'tardis-eye-star', { 0, 0 })
   end
@@ -233,35 +248,35 @@ function E.ensure(f)
       })
     )
   end
-  -- The Eye hall is a closed chamber: same wall as the console room, openings filled in (1.9).
-  if valid(room.rim) and room.rim.sprite ~= 'tardis-eye-rim' then
-    room.rim.destroy()
+  -- 1.10: the hall's floor and closed wall are one Blender render (tools/blender/rooms.py). Older
+  -- rim/hull sprites go; energy lines are redrawn so they sit on top of the new floor.
+  if room.art_revision ~= 2 then
+    for _, key in ipairs({ 'rim', 'hull', 'floor', 'wall' }) do
+      if valid(room[key]) then
+        room[key].destroy()
+      end
+      room[key] = nil
+    end
+    for key, line in pairs(room.energy_lines or {}) do
+      if valid(line) then
+        line.destroy()
+      end
+      room.energy_lines[key] = nil
+    end
+    room.art_revision = 2
   end
-  if not valid(room.hull) then
-    room.hull = tracked(
-      room,
-      rendering.draw_sprite({
-        sprite = 'tardis-hull-ring',
-        surface = f.eye_surface,
-        target = { 0, 0 },
-        render_layer = 'above-tiles',
-        x_scale = 2.15,
-        y_scale = 2.15,
-      })
-    )
-  end
-  if not valid(room.rim) then
-    room.rim = tracked(
-      room,
-      rendering.draw_sprite({
-        sprite = 'tardis-eye-rim',
-        surface = f.eye_surface,
-        target = { 0, 0 },
-        render_layer = 'floor',
-        x_scale = 2,
-        y_scale = 2,
-      })
-    )
+  for _, key in ipairs({ 'floor', 'wall' }) do
+    if not valid(room[key]) then
+      room[key] = tracked(
+        room,
+        rendering.draw_sprite({
+          sprite = 'tardis-eye-' .. key,
+          surface = f.eye_surface,
+          target = { 0, 0 },
+          render_layer = 'floor',
+        })
+      )
+    end
   end
   for _, key in ipairs(order) do
     local p = E.module_positions[key]
@@ -494,7 +509,7 @@ function E.tick(f)
   end
   if valid(room.core) then
     -- The rings turn faster and the star burns cleaner as energy machines come back online.
-    room.core.animation_speed = returned and 0 or (0.08 + 0.05 * repaired)
+    room.core.animation_speed = returned and 0 or (0.13 + 0.085 * repaired)
     room.core.color = returned and { 0.25, 0.27, 0.3, 1 }
       or repaired == 4 and { 1, 1, 1, 1 }
       or { 0.85 + 0.15 * pulse, 0.62, 0.5, 1 }

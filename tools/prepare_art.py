@@ -70,15 +70,17 @@ process(glow, lambda x, y, d, r, g, b, a: (255, 255, 255, int(255 * max(0.0, 1 -
 glow.save(OUT / 'glow.png', optimize=True)
 print('glow.png: 256x256')
 
-# Eye of Harmony: Blender loop (tools/blender/eye_star.py) -> two 8x8 sheets of 512 px frames.
+# Eye of Harmony: Blender loop (tools/blender/eye_star.py) -> 448 px frames, 9x9 per sheet.
 loop = sorted((ROOT / 'art/render/star/loop').glob('*.png'))
 if loop:
-    frames = [Image.open(f).convert('RGBA').resize((512, 512), Image.LANCZOS) for f in loop]
-    for n, start in enumerate(range(0, len(frames), 64), 1):
-        chunk = frames[start:start + 64]
-        rows = (len(chunk) + 7) // 8
-        sheet = Image.new('RGBA', (8 * 512, rows * 512))
+    frames = [Image.open(f).convert('RGBA').resize((448, 448), Image.LANCZOS) for f in loop]
+    for old in OUT.glob('eye-core-*.png'):
+        old.unlink()
+    for n, start in enumerate(range(0, len(frames), 81), 1):
+        chunk = frames[start:start + 81]
+        rows = (len(chunk) + 8) // 9
+        sheet = Image.new('RGBA', (9 * 448, rows * 448))
         for i, fr in enumerate(chunk):
-            sheet.paste(fr, ((i % 8) * 512, (i // 8) * 512))
+            sheet.paste(fr, ((i % 9) * 448, (i // 9) * 448))
         sheet.save(OUT / f'eye-core-{n}.png', optimize=True)
-        print(f'eye-core-{n}.png: {len(chunk)} frames')
+        print(f'eye-core-{n}.png: {len(chunk)} frames, {rows} rows')

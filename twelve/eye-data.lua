@@ -40,8 +40,8 @@ ladder.name = 'tardis-eye-ladder'
 ladder.localised_name = { 'entity-name.tardis-eye-ladder' }
 ladder.localised_description = { 'entity-description.tardis-eye-ladder' }
 -- The same stair seen from below, climbing towards the console room's light.
-ladder.picture = { filename = P .. 'stair-up.png', size = 384, scale = 0.42, shift = { 0, -0.9 } }
-ladder.selection_box = { { -2, -2.6 }, { 2, 1.6 } }
+ladder.picture = { filename = P .. 'stair-up.png', size = 384, scale = 0.62, shift = { 0, -1.3 } }
+ladder.selection_box = { { -2.6, -3.6 }, { 2.6, 2 } }
 
 data:extend({
   machine,
@@ -72,19 +72,19 @@ data:extend({
     shift = { 0, -1 },
   },
   {
-    -- Blender loop (tools/blender/eye_star.py): star and three gyroscope rings, 96 frames.
-    -- 512 px frames of 6.2 units; scale 1.16 makes the star's disc 6 tiles across, centred over the
+    -- Blender loop (tools/blender/eye_star.py): star and three gyroscope rings, 160 frames.
+    -- 448 px frames of 6.2 units; scale 1.33 makes the star's disc 6 tiles across, centred over the
     -- pit. Drawn as glow: the render carries its own lighting, so the dark hall must not dim it.
     type = 'animation',
     name = 'tardis-eye-core',
-    width = 512,
-    height = 512,
-    frame_count = 96,
-    scale = 1.16,
+    width = 448,
+    height = 448,
+    frame_count = 160,
+    scale = 1.33,
     draw_as_glow = true,
     stripes = {
-      { filename = P .. 'eye-core-1.png', width_in_frames = 8, height_in_frames = 8 },
-      { filename = P .. 'eye-core-2.png', width_in_frames = 8, height_in_frames = 4 },
+      { filename = P .. 'eye-core-1.png', width_in_frames = 9, height_in_frames = 9 },
+      { filename = P .. 'eye-core-2.png', width_in_frames = 9, height_in_frames = 9 },
     },
   },
 })

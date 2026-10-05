@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.10.0
+Date: 2026-10-05
+  Graphics:
+    - The Eye of Harmony loop has 160 frames for smoother motion.
+    - The Eye hall floor and closed wall are one 3D render: a round pit with a brass lip, smooth panel rings, grated walkways and pads for the energy machines.
+    - The console room wall ring is re-rendered in the same style, with its hull matching exactly and corridors left open.
+    - The stair in the Eye hall is larger and lit from above.
+---------------------------------------------------------------------------------------------------
 Version: 1.9.0
 Date: 2026-10-05
   Graphics:
