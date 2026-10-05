@@ -5,8 +5,17 @@ local Circuit = require('twelve.circuit')
 local Interior = require('twelve.interior')
 local Eye = require('twelve.eye')
 local EyeCore = require('twelve.eye-core')
-local M =
-  { C = C, Rooms = Rooms, Voyage = Voyage, Circuit = Circuit, Interior = Interior, Eye = Eye, EyeCore = EyeCore }
+local Blueprints = require('twelve.blueprints')
+local M = {
+  C = C,
+  Rooms = Rooms,
+  Voyage = Voyage,
+  Circuit = Circuit,
+  Interior = Interior,
+  Eye = Eye,
+  EyeCore = EyeCore,
+  Blueprints = Blueprints,
+}
 local function root()
   return storage.twelve
 end
@@ -40,6 +49,7 @@ function M.init()
     or { ships = {}, next_id = 1, ports = {}, players = {}, starters = {}, last_walk = {} }
   for _, f in pairs(storage.twelve.ships) do
     Rooms.init(f)
+    Blueprints.ensure(f)
     Voyage.ensure(f, true)
     Interior.apply(f)
     M.ensure_eye(f)
@@ -332,6 +342,7 @@ function M.create(box)
   interior(f)
   exterior(f)
   Rooms.init(f)
+  Blueprints.ensure(f)
   Interior.apply(f)
   M.ensure_eye(f)
   M.ensure_decor(f)
@@ -426,6 +437,7 @@ function M.surface_deleted(e)
         end
       end
       Rooms.destroy(f)
+      Blueprints.destroy(f)
       Circuit.destroy(f)
       if f.cargo.valid then
         f.cargo.destroy()
@@ -1039,6 +1051,32 @@ function M.ascend(index, id)
     root().last_walk[p.index] = game.tick
   end
   return ok, why
+end
+-- Blueprint archive in the console; only reachable from inside the ship.
+local function archive_access(index, id)
+  local p = game.get_player(index)
+  local f = M.get(id)
+  if not p or not f or p.force ~= f.force then
+    return nil, nil, { 'tardis-ship.ship-not-found' }
+  end
+  if not inside(p, f) then
+    return nil, nil, { 'tardis-ship.blueprint-need-inside' }
+  end
+  return p, f
+end
+function M.store_blueprint(index, id, slot)
+  local p, f, err = archive_access(index, id)
+  if not p then
+    return false, err
+  end
+  return Blueprints.store(p, f, tonumber(slot))
+end
+function M.take_blueprint(index, id, slot, copy)
+  local p, f, err = archive_access(index, id)
+  if not p then
+    return false, err
+  end
+  return Blueprints.take(p, f, tonumber(slot), copy ~= false)
 end
 function M.repair_eye(index, id, key)
   local f = M.get(id)

@@ -163,9 +163,6 @@ local function room_floor(p, kind, x, y)
   if dx == -12 or dx == 11 or dy == -10 or dy == 9 then
     return 'tardis-brass-floor'
   end
-  if kind == 'library' then
-    return ((dx >= -2 and dx <= 1) or dy == -7) and 'tardis-brass-floor' or 'tardis-steel-floor'
-  end
   if (dy >= -1 and dy <= 1) or (kind == 'workshop' and (dx == -7 or dx == 6)) then
     return 'tardis-grate-floor'
   end
@@ -210,9 +207,7 @@ function I.room(f, slot, room, legacy)
   end
   for x = p.x - 12, p.x + 11 do
     for y = p.y - 10, p.y + 9 do
-      -- 1.2 library shelves cut the perimeter to void. Remove that old artificial
-      -- obstacle while retaining any player-placed floor elsewhere.
-      tile(x, y, room_floor(p, room.kind, x, y), room.kind == 'library')
+      tile(x, y, room_floor(p, room.kind, x, y))
     end
   end
   s.set_tiles(tiles, true)
@@ -244,14 +239,6 @@ function I.room(f, slot, room, legacy)
   for _, x in ipairs({ -8, -4, 0, 4, 8 }) do
     if x ~= 0 or slot > 2 or f.room_layout_version == 1 then
       wall(f, room.entities, p.x + x, p.y - 8.75)
-    end
-  end
-  if room.kind == 'library' then
-    for _, x in ipairs({ -7, -4, 4, 7 }) do
-      local at = { p.x + x, p.y - 6.5 }
-      if s.can_place_entity({ name = 'tardis-archive-cabinet', position = at, force = f.force }) then
-        entity(f, room.entities, 'tardis-archive-cabinet', at)
-      end
     end
   end
   room.architecture_revision = I.revision

@@ -1,6 +1,6 @@
 local Interior = require('twelve.interior')
 local R = { build_ticks = 600, max_rooms = 6, parents = { [3] = 1, [4] = 1, [5] = 2, [6] = 2 } }
-R.order = { 'workshop', 'vault', 'library' }
+R.order = { 'workshop', 'vault' }
 R.plans = {
   workshop = {
     title = { 'tardis-interior.room-workshop-title' },
@@ -29,18 +29,6 @@ R.plans = {
       },
     },
   },
-  library = {
-    title = { 'tardis-interior.room-library-title' },
-    icon = 'wood',
-    subtitle = { 'tardis-interior.room-library-subtitle' },
-    description = { 'tardis-interior.room-library-description' },
-    cost = {
-      { name = 'wood', count = 150 },
-      { name = 'steel-plate', count = 50 },
-      { name = 'copper-plate', count = 100 },
-      { name = 'electronic-circuit', count = 25 },
-    },
-  },
 }
 function R.init(f)
   f.rooms = f.rooms or {}
@@ -48,6 +36,19 @@ function R.init(f)
   f.room_revision = f.room_revision or 0
   if not f.room_layout_version and not next(f.rooms) then
     f.room_layout_version = 2
+  end
+  -- 1.7 dropped the library room: blueprints now live in the console archive.
+  for _, room in pairs(f.rooms) do
+    if room.kind == 'library' then
+      room.kind = 'workshop'
+      if room.state == 'building' then
+        room.state = 'refund'
+        room.finish = nil
+      else
+        room.empty_cabinets = true
+      end
+      f.room_revision = f.room_revision + 1
+    end
   end
 end
 function R.position(slot, f)
@@ -194,8 +195,29 @@ local function construct(f, slot, room)
   f.room_revision = f.room_revision + 1
   f.force.print({ 'tardis-interior.room-ready', slot, R.plans[room.kind].title })
 end
+-- Old library cabinets are emptied into the warehouse, then removed.
+local function empty_cabinets(f, room, move)
+  local left = false
+  for _, e in pairs(room.entities or {}) do
+    if e.valid and e.name == 'tardis-archive-cabinet' then
+      local inventory = e.get_inventory(defines.inventory.chest)
+      move(inventory, f.cargo)
+      if inventory.is_empty() then
+        e.destroy()
+      else
+        left = true
+      end
+    end
+  end
+  room.empty_cabinets = left or nil
+end
 function R.tick(f, move)
   R.init(f)
+  for _, room in pairs(f.rooms) do
+    if room.empty_cabinets then
+      empty_cabinets(f, room, move)
+    end
+  end
   for slot, room in pairs(f.rooms) do
     if room.state == 'building' and game.tick >= room.finish then
       construct(f, slot, room)

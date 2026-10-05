@@ -82,6 +82,8 @@ remote.add_interface('tardis12', {
   cancel_room = M.cancel_room,
   repair = M.repair,
   repair_eye = M.repair_eye,
+  store_blueprint = M.store_blueprint,
+  take_blueprint = M.take_blueprint,
   descend = M.descend,
   ascend = M.ascend,
   return_doctor = M.return_doctor,

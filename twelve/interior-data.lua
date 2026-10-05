@@ -42,7 +42,8 @@ data:extend({
   },
 })
 
--- Native chests are working archive cabinets, not a photograph of shelving.
+-- Library cabinets from 1.6 saves. Kept hidden so their contents survive until
+-- rooms.lua moves them into the warehouse; remove in a later version.
 local cabinet = table.deepcopy(data.raw.container['steel-chest'])
 cabinet.name = 'tardis-archive-cabinet'
 cabinet.localised_name = { 'entity-name.tardis-archive-cabinet' }
@@ -51,4 +52,5 @@ cabinet.inventory_size = 48
 cabinet.flags = { 'placeable-player', 'player-creation', 'not-blueprintable', 'not-deconstructable' }
 cabinet.next_upgrade = nil
 cabinet.fast_replaceable_group = nil
+cabinet.hidden = true
 data:extend({ cabinet })

@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.7.0
+Date: 2026-10-05
+  Features:
+    - Blueprint archive in the console (Architecture system): 60 slots for blueprints, books and planners that travel with the ship. Left-click takes a copy, right-click takes the original.
+  Changes:
+    - Removed the library room. Existing library rooms become workshops; their cabinets are emptied into the warehouse and materials of unfinished libraries are refunded.
+---------------------------------------------------------------------------------------------------
 Version: 1.6.0
 Date: 2026-10-05
   Locale:

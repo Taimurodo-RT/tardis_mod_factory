@@ -593,6 +593,29 @@ local function ports(p, f, parent)
   note(parent, { 'tardis-ui.circuit-codes' })
   note(parent, { 'tardis-ui.circuit-notes' })
 end
+-- The console remembers blueprints: a slot grid in the Architecture system.
+local function blueprint_archive(p, f, parent)
+  local archive = M.Blueprints.ensure(f)
+  local box = add(parent, 'frame', 'blueprint-archive', nil, { direction = 'vertical', style = 't12_card' })
+  box.style.width = canvas(parent)
+  label(box, { 'tardis-ui.blueprints-title' }).style = 't12_subtitle'
+  local hint = note(box, { 'tardis-ui.blueprints-hint' })
+  hint.style.maximal_width = canvas(parent) - 24
+  local grid = add(box, 'table', 'blueprint-grid', nil, { column_count = 12 })
+  local inside = access(p, f)
+  for i = 1, #archive do
+    local stack = archive[i]
+    local filled = stack.valid_for_read
+    local b = add(grid, 'sprite-button', 't12-bp-' .. i, nil, {
+      sprite = filled and ('item/' .. stack.name) or nil,
+      tags = { slot = i },
+      tooltip = filled and { '', M.Blueprints.label(stack), '\n', { 'tardis-ui.blueprint-slot-hint' } }
+        or { 'tardis-ui.blueprint-empty-hint' },
+      style = 't12_slot',
+    })
+    b.enabled = inside
+  end
+end
 local function rooms(p, f, parent)
   local R = M.Rooms
   R.init(f)
@@ -789,6 +812,7 @@ local function rooms(p, f, parent)
     button(parent, 't12-migrate-rooms', { 'tardis-ui.room-migrate' }).enabled = access(p, f) and not f.flight
   end
   note(parent, { 'tardis-ui.help-room-supply' })
+  blueprint_archive(p, f, parent)
 end
 local function update_restoration(p, f, parent)
   local story = V.info(f)
@@ -1437,6 +1461,14 @@ function UI.click(e)
     refresh(p, 5)
   elseif n == 't12-migrate-rooms' then
     _, why = M.relayout(p.index, f.id)
+    refresh(p, 5)
+  elseif n:find('t12-bp-', 1, true) then
+    local cursor = p.cursor_stack
+    if (cursor and cursor.valid_for_read) or p.cursor_record then
+      _, why = M.store_blueprint(p.index, f.id, tags.slot)
+    else
+      _, why = M.take_blueprint(p.index, f.id, tags.slot, e.button ~= defines.mouse_button_type.right)
+    end
     refresh(p, 5)
   elseif n:find('t12-room-slot-', 1, true) then
     st.room_slot = tags.slot

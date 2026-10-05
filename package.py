@@ -8,7 +8,7 @@ import json, os, pathlib, subprocess, sys, zipfile
 
 sys.stdout.reconfigure(encoding='utf-8')
 ROOT = pathlib.Path(__file__).resolve().parent
-EXCLUDE = {'.git', '.gitignore', '.gitattributes', 'stylua.toml', 'package.py', 'check_locale.py'}
+EXCLUDE = {'.git', '.gitignore', '.gitattributes', 'stylua.toml', 'package.py', 'check_locale.py', 'art'}
 
 
 def build():

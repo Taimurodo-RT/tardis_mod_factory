@@ -99,14 +99,6 @@ data:extend({
     scale = 0.34,
     shift = { 0, -1.05 },
   },
-  {
-    type = 'sprite',
-    name = 'tardis-library-room',
-    filename = P .. 'library-room.png',
-    width = 1536,
-    height = 1280,
-    scale = 0.5,
-  },
   { type = 'sprite', name = 'tardis-room', filename = P .. 'room.png', width = 1536, height = 1536, scale = 0.75 },
   { type = 'custom-input', name = 'tardis-control', key_sequence = 'CONTROL + T', consuming = 'none' },
   {
