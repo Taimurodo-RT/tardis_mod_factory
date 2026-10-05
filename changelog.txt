@@ -5,6 +5,7 @@ Date: 2026-10-05
     - Removed the unused runtime, prototypes, graphics and locale keys inherited from the original TARDIS mod.
     - The exterior box and console prototypes are now defined once, without data-stage overrides.
     - Removed the hidden, unused TARDIS recipe.
+    - Reformatted all Lua sources with StyLua (stylua.toml); no behaviour change.
   Locale:
     - Mod name and description now match the TARDIS XII edition.
 ---------------------------------------------------------------------------------------------------

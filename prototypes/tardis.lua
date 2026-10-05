@@ -1,55 +1,55 @@
-local P = "__tardis__/graphics/twelve/"
+local P = '__tardis__/graphics/twelve/'
 
-data:extend {
-    {
-        type = "storage-tank",
-        name = "tardis",
-        icon = P .. "exterior-icon.png",
-        icon_size = 64,
-        flags = {"player-creation", "placeable-player", "not-rotatable"},
-        minable = {mining_time = 0.5, result = "tardis-instantiated", count = 1},
-        placeable_by = {item = "tardis", count = 1},
-        max_health = 10000,
-        collision_box = {{-0.85, -0.85}, {0.85, 0.85}},
-        selection_box = {{-1, -2.8}, {1, 1}},
-        pictures = {
-            picture = {filename = P .. "exterior.png", width = 256, height = 384, scale = 0.34, shift = {0, -1.05}},
-        },
-        window_bounding_box = {{0, 0}, {0, 0}},
-        fluid_box = {
-            volume = 1,
-            pipe_connections = {},
-        },
-        flow_length_in_ticks = 1,
-        circuit_wire_max_distance = 0,
-        map_color = {r = 0.8, g = 0.7, b = 0.55},
-        is_military_target = false,
-        moc_ignore = true,
+data:extend({
+  {
+    type = 'storage-tank',
+    name = 'tardis',
+    icon = P .. 'exterior-icon.png',
+    icon_size = 64,
+    flags = { 'player-creation', 'placeable-player', 'not-rotatable' },
+    minable = { mining_time = 0.5, result = 'tardis-instantiated', count = 1 },
+    placeable_by = { item = 'tardis', count = 1 },
+    max_health = 10000,
+    collision_box = { { -0.85, -0.85 }, { 0.85, 0.85 } },
+    selection_box = { { -1, -2.8 }, { 1, 1 } },
+    pictures = {
+      picture = { filename = P .. 'exterior.png', width = 256, height = 384, scale = 0.34, shift = { 0, -1.05 } },
     },
-    {
-        type = "item-with-tags",
-        name = "tardis-instantiated",
-        localised_name = {"item-name.tardis-packed", {"entity-name.tardis"}},
-        icons = {{icon = P .. "exterior-icon.png", icon_size = 64}},
-        subgroup = "tardis",
-        order = "b-a",
-        place_result = "tardis",
-        stack_size = 1,
-        weight = 100000000,
-        flags = {"not-stackable"},
-        hidden_in_factoriopedia = true,
-        factoriopedia_alternative = "tardis"
+    window_bounding_box = { { 0, 0 }, { 0, 0 } },
+    fluid_box = {
+      volume = 1,
+      pipe_connections = {},
     },
-    {
-        type = "item",
-        name = "tardis",
-        icon = P .. "exterior-icon.png",
-        icon_size = 64,
-        subgroup = "tardis",
-        order = "b-a",
-        weight = 100000000,
-        place_result = "tardis",
-        stack_size = 1,
-        flags = {"primary-place-result", "not-stackable"}
-    }
-}
+    flow_length_in_ticks = 1,
+    circuit_wire_max_distance = 0,
+    map_color = { r = 0.8, g = 0.7, b = 0.55 },
+    is_military_target = false,
+    moc_ignore = true,
+  },
+  {
+    type = 'item-with-tags',
+    name = 'tardis-instantiated',
+    localised_name = { 'item-name.tardis-packed', { 'entity-name.tardis' } },
+    icons = { { icon = P .. 'exterior-icon.png', icon_size = 64 } },
+    subgroup = 'tardis',
+    order = 'b-a',
+    place_result = 'tardis',
+    stack_size = 1,
+    weight = 100000000,
+    flags = { 'not-stackable' },
+    hidden_in_factoriopedia = true,
+    factoriopedia_alternative = 'tardis',
+  },
+  {
+    type = 'item',
+    name = 'tardis',
+    icon = P .. 'exterior-icon.png',
+    icon_size = 64,
+    subgroup = 'tardis',
+    order = 'b-a',
+    weight = 100000000,
+    place_result = 'tardis',
+    stack_size = 1,
+    flags = { 'primary-place-result', 'not-stackable' },
+  },
+})
