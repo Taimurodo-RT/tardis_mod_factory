@@ -214,6 +214,17 @@ function E.ensure(f)
       })
     )
   end
+  if not valid(room.ring) then
+    room.ring = tracked(
+      room,
+      rendering.draw_sprite({
+        sprite = 'tardis-eye-ring',
+        surface = f.eye_surface,
+        target = { 0, 0 },
+        render_layer = 'higher-object-under',
+      })
+    )
+  end
   if not valid(room.star_light) then
     room.star_light = tracked(
       room,
@@ -475,6 +486,13 @@ function E.tick(f)
     room.halo.x_scale = 1.015 + 0.018 * pulse
     room.halo.y_scale = room.halo.x_scale
     room.halo.color = { 1, 0.56, 0.2, 0.11 + 0.06 * pulse }
+  end
+  if valid(room.ring) then
+    -- The containment ring turns faster as more energy machines come back online.
+    if not returned then
+      room.ring.orientation = (room.ring.orientation + (1 + repaired) / (60 * 240 / 6)) % 1
+    end
+    room.ring.color = returned and { 0.45, 0.48, 0.52, 1 } or { 1, 1, 1, 1 }
   end
   if valid(room.star_light) then
     room.star_light.intensity = returned and 0 or (0.48 + 0.12 * pulse + 0.025 * repaired)

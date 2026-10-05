@@ -3,6 +3,10 @@ Version: 1.7.0
 Date: 2026-10-05
   Features:
     - Blueprint archive in the console (Architecture system): 60 slots for blueprints, books and planners that travel with the ship. Left-click takes a copy, right-click takes the original.
+  Graphics:
+    - New Type 40 console with a glass time rotor that glows: calm cyan, bright white in flight, amber when power is low.
+    - Glass floor in the centre of the console room, lit from below by the Eye of Harmony.
+    - New Eye of Harmony star with a separate containment ring that turns faster as energy machines are repaired.
   Changes:
     - Removed the library room. Existing library rooms become workshops; their cabinets are emptied into the warehouse and materials of unfinished libraries are refunded.
 ---------------------------------------------------------------------------------------------------

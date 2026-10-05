@@ -95,7 +95,9 @@ try:
     ]
     r.lua("local f=Twelve.get(storage.cap_id) for _,s in pairs{f.surface,f.eye_surface} do s.request_to_generate_chunks({0,0},6) s.force_generate_chunk_requests() game.forces.player.chart(s,{{-200,-200},{200,200}}) end")
     time.sleep(3)
+    ONLY = [x for x in sys.argv[4:]]
     for name, surf, pos, zoom in shots:
+        if ONLY and name not in ONLY: continue
         print(name, r.lua(f"local f=Twelve.get(storage.cap_id) local ok,e=pcall(function() game.take_screenshot{{by_player=1,surface={surf},position={pos},zoom={zoom},resolution={{1600,1000}},show_gui=false,show_entity_info=false,daytime=0.5,path='scene-{name}.png'}} end) rcon.print(ok and 'ok' or tostring(e))"))
         time.sleep(1)
     time.sleep(4)

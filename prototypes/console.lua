@@ -24,7 +24,7 @@ data:extend({
     inventory_size = 1,
     inventory_type = 'with_filters_and_bar',
     quality_affects_inventory_size = false,
-    picture = { filename = P .. 'console.png', width = 512, height = 512, scale = 0.48, shift = { 0, -1.6 } },
+    picture = { filename = P .. 'console.png', width = 512, height = 512, scale = 0.6, shift = { 0, -1.2 } },
     render_layer = 'object',
   },
   {

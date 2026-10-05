@@ -6,6 +6,7 @@ local Interior = require('twelve.interior')
 local Eye = require('twelve.eye')
 local EyeCore = require('twelve.eye-core')
 local Blueprints = require('twelve.blueprints')
+local Ambience = require('twelve.ambience')
 local M = {
   C = C,
   Rooms = Rooms,
@@ -830,6 +831,7 @@ function M.tick()
     local eye_used = valid(f.eye_power) and math.max(10000, (f.eye_allocated or 0) - f.eye_power.energy) or 0
     reclaim(f)
     f.energy = math.min(C.capacity, f.energy + Voyage.recharge(f) * C.step / 60)
+    Ambience.tick(f, Voyage.can_fly(f) and before < Voyage.base_cost)
     if f.flight and game.tick >= f.flight.until_tick then
       finish(f)
     end
@@ -943,6 +945,7 @@ function M.demo(p)
   M.enter(p.index, id)
 end
 function M.ensure_decor(f)
+  Ambience.ensure(f)
   if not (f.rim and f.rim.valid) then
     f.rim = rendering.draw_sprite({
       sprite = 'tardis-circular-rim',

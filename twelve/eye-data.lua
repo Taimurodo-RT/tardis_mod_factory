@@ -54,7 +54,7 @@ data:extend({
     selectable_in_game = false,
     collision_mask = { layers = {} },
     collision_box = { { 0, 0 }, { 0, 0 } },
-    picture = { filename = P .. 'star.png', width = 768, height = 768, scale = 0.59, apply_runtime_tint = true },
+    picture = { filename = P .. 'star.png', width = 1024, height = 1024, scale = 0.43, apply_runtime_tint = true },
     render_layer = 'object',
   },
   {
@@ -70,8 +70,8 @@ data:extend({
     type = 'sprite',
     name = 'tardis-eye-star-glow',
     filename = P .. 'star.png',
-    width = 768,
-    height = 768,
-    scale = 0.59,
+    width = 1024,
+    height = 1024,
+    scale = 0.43,
   },
 })

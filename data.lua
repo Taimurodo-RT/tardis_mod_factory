@@ -116,6 +116,7 @@ require('twelve.voyage-data')
 require('twelve.circuit-data')
 require('twelve.interior-data')
 require('twelve.eye-data')
+require('twelve.ambience-data')
 local anchor = table.deepcopy(terminal)
 anchor.name = 'tardis-anchor'
 anchor.localised_name = { 'entity-name.tardis-anchor' }
